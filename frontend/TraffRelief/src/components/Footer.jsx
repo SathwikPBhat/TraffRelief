@@ -6,7 +6,7 @@ import { MdPhoneInTalk } from "react-icons/md";
 
 function Footer() {
   return (
-    <div className="w-full h-30 bg-teal-800 text-white font-['QuickSand'] p-6 flex items-center justify-between mt-5">
+    <div className="w-full h-30 bg-teal-800 text-white font-['QuickSand'] p-6 flex items-center justify-between mt-5  shadow-[0px_-4px_20px_0px_rgba(96,125,139,1.00)]">
     <div >
     <p>&copy; 2025 TraffRelief</p>
     <div className='flex gap-1 items-center'>

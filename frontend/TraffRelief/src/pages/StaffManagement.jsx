@@ -1,21 +1,47 @@
-import React,{useState} from "react";
-import logo from "../assets/logo.png";
+import React, { useState } from "react";
 import SelectedVictimCard from "../components/SelectedVictimCard";
 import Footer from "../components/Footer";
 import AdminNavbar from "../components/AdminNavbar";
+import Pagination from "../components/Pagination";
 
 function StaffManagement() {
-  const [selectedVictims, setSelectedVictims] = useState(["Sonam Wangchuk","Mamata Bannerjee","Dhruv Rathee","Rahul Gandhi"]);
+  const [selectedVictims, setSelectedVictims] = useState([
+    "Sonam Wangchuk",
+    "Mamata Bannerjee",
+    "Dhruv Rathee",
+    "Rahul Gandhi",
+  ]);
+  const [currPage, setCurrPage] = useState(1);
 
-  const deleteVictim = (nameToDelete) => 
-    setSelectedVictims(currentVictims => 
-        currentVictims.filter(name => name !== nameToDelete)
+  const StaffData = [
+    { name: "Alice", role: "Admin", center: "Mumbai", status: "Active" },
+    { name: "Bob", role: "Manager", center: "Delhi", status: "Inactive" },
+    { name: "Charlie", role: "Staff", center: "Pune", status: "Active" },
+    { name: "David", role: "Intern", center: "Goa", status: "Active" },
+    { name: "Eva", role: "Lead", center: "Bangalore", status: "Active" },
+    { name: "Frank", role: "Staff", center: "Kolkata", status: "Inactive" },
+    { name: "Grace", role: "Admin", center: "Chennai", status: "Active" },
+    { name: "Hank", role: "Intern", center: "Hyderabad", status: "Active" },
+  ];
+
+  const deleteVictim = (nameToDelete) =>
+    setSelectedVictims((currentVictims) =>
+      currentVictims.filter((name) => name !== nameToDelete)
     );
+
+  const totalPages = Math.ceil(StaffData.length / 4);
+  const startIdx = (currPage - 1) * 4;
+  const endIdx = startIdx + 4;
+  const visibleRows = StaffData.slice(startIdx, endIdx);
+
+  const handlePageChange = (pageNo) => {
+    if (pageNo >= 1 && pageNo <= totalPages) setCurrPage(pageNo);
+  };
+
   return (
     <>
       <main className="w-full min-h-screen bg-stone-100 flex flex-col items-start font-['QuickSand']">
         <AdminNavbar />
-
         <div className="w-full p-6 flex-col items-center gap-6">
           <div className="w-full flex flex-col gap-2">
             {/* search + filter by */}
@@ -79,27 +105,38 @@ function StaffManagement() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  <tr className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-700">person</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">ABC</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">Mumbai</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">Active</td>
-                    <td className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">
-                      View
-                    </td>
-                  </tr>
-                  <tr className="border-t border-gray-200 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-700">person</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">ABC</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">Mumbai</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">Active</td>
-                    <td className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">
-                      View
-                    </td>
-                  </tr>
+                  {visibleRows.map((val, i) => {
+                    return (
+                      <tr
+                        key={i}
+                        className="border-t border-gray-200 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {val.name}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {val.role}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {val.center}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">
+                          {val.status}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">
+                          View
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+            <Pagination
+              curr={currPage}
+              total={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
 
           <div className="mt-6 w-full flex flex-col justify-between gap-2">
@@ -194,12 +231,25 @@ function StaffManagement() {
             <div className="flex flex-col justify-around gap-2 py-4">
               <p className="text-black text-2xl">Selected Victims</p>
               <div className="grid items-center justify-evenly lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-2 ">
-                { selectedVictims.length > 0 ? 
-                  selectedVictims.map((name)=><SelectedVictimCard key={name} name = {name} onDelete = {deleteVictim}/>):
+                {selectedVictims.length > 0 ? (
+                  selectedVictims.map((name) => (
+                    <SelectedVictimCard
+                      key={name}
+                      name={name}
+                      onDelete={deleteVictim}
+                    />
+                  ))
+                ) : (
                   <p>No victim selected</p>
-                }
+                )}
               </div>
             </div>
+            {selectedVictims.length > 0 && 
+              <div className="flex items-center justify-center">
+              
+                <button className="w-1/4 h-10 text-white bg-teal-700 p-4 rounded-xl flex justify-center items-center">Assign</button>
+              </div>
+            }
           </div>
         </div>
         <Footer />
