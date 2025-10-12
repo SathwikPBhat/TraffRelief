@@ -4,9 +4,9 @@ import Login from './pages/Login';
 import StaffManagement from './pages/StaffManagement';
 import Table from './components/Table';
 import StaffDashboard from './pages/StaffDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
-  
   
 
   const StaffData = [
@@ -20,7 +20,7 @@ function App() {
   const handleSubmit = () => {}
   return (
     <>
-    <StaffDashboard/>
+    <AdminDashboard/>
     </>
   )
 }
