@@ -22,7 +22,8 @@ const staffSchema = new mongoose.Schema({
     },
     mobileNo:{
         type:String,
-        required:true,  
+        required:true,
+        unique:true  
     },
     centre:{
         type: mongoose.Schema.Types.ObjectId,

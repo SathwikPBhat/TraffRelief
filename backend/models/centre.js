@@ -4,6 +4,7 @@ const centreSchema = new mongoose.Schema({
     centreId:{
         type:String,
         required:true,  
+        unique:true
     },
     centreName:{
         type:String,
