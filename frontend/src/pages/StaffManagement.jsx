@@ -3,6 +3,7 @@ import SelectedVictimCard from "../components/SelectedVictimCard";
 import Footer from "../components/Footer";
 import AdminNavbar from "../components/AdminNavbar";
 import Pagination from "../components/Pagination";
+import AddStaffModal from '../components/AddStaffModal';
 
 function StaffManagement() {
   const [selectedVictims, setSelectedVictims] = useState([
@@ -38,9 +39,10 @@ function StaffManagement() {
     if (pageNo >= 1 && pageNo <= totalPages) setCurrPage(pageNo);
   };
 
+  const [staffModal, setStaffModal] = useState(false);
   return (
     <>
-      <main className="w-full min-h-screen bg-stone-100 flex flex-col items-start font-['QuickSand']">
+      <main className="w-full min-h-screen bg-stone-100 flex flex-col items-start font-['QuickSand']" >
         <AdminNavbar />
         <div className="w-full p-6 flex-col items-center gap-6">
           <div className="w-full flex flex-col gap-2">
@@ -90,9 +92,14 @@ function StaffManagement() {
             </div>
           </div>
 
+          {staffModal ? <AddStaffModal showModal={setStaffModal}/> : 
           <div className="w-full py-4 flex flex-col justify-around gap-4 mt-4">
             {/* stafflist */}
-            <p className="text-3xl font-medium ">Staff List</p>
+            
+            <div className="w-full flex items-center justify-between">
+              <p className="text-3xl font-medium ">Staff List</p>
+              <button onClick={()=>{setStaffModal(true)}} className="flex items-center justify-center p-2 rounded-xl text-white bg-teal-600 hover:bg-teal-700 hover:cursor-pointer hover:scale-105">Add Staff</button>
+            </div>
             <div className="w-full overflow-hidden rounded-2xl">
               <table className="w-full border-y-3 border-x-2 border-teal-700">
                 <thead className="h-14 bg-stone-100 text-black font-['QuickSand'] font-semibold">
@@ -138,6 +145,7 @@ function StaffManagement() {
               onPageChange={handlePageChange}
             />
           </div>
+          }
 
           <div className="mt-6 w-full flex flex-col justify-between gap-2">
             {/* Assign victims */}

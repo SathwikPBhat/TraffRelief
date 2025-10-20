@@ -5,6 +5,11 @@ import StaffManagement from './pages/StaffManagement';
 import Table from './components/Table';
 import StaffDashboard from './pages/StaffDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AddStaffModal from './components/AddStaffModal';
+import { ToastContainer } from 'react-toastify';
+import AddVictimModalForAdmin from './components/AddVictimModalForAdmin';
+import PrivateRoute from './components/PrivateRoute';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   
@@ -17,10 +22,23 @@ function App() {
    
   ];
 
-  const handleSubmit = () => {}
   return (
     <>
-    <AdminDashboard/>
+    <ToastContainer/>
+    <Routes>
+      <Route path = '/' element = {<Navigate to="/login"/>}/>
+      <Route path ='/login' element = {<Login/>}/>
+      <Route path ='/admin/dashboard' element = {
+        <PrivateRoute>
+          <AdminDashboard/>
+        </PrivateRoute>
+      }/>
+      <Route path ='/staff/dashboard' element = {
+        <PrivateRoute>
+          <StaffDashboard/>
+        </PrivateRoute>
+      }/>
+    </Routes>
     </>
   )
 }
