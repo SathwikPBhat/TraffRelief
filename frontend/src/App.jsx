@@ -10,6 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import AddVictimModalForAdmin from './components/AddVictimModalForAdmin';
 import PrivateRoute from './components/PrivateRoute';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import VictimManagementForAdmin from './pages/VictimManagementForAdmin';
 
 function App() {
   
@@ -28,6 +29,11 @@ function App() {
     <Routes>
       <Route path = '/' element = {<Navigate to="/login"/>}/>
       <Route path ='/login' element = {<Login/>}/>
+      <Route path = '/admin/victims' element = {
+        <PrivateRoute>
+          <VictimManagementForAdmin/>
+          </PrivateRoute>
+      }/>
       <Route path ='/admin/dashboard' element = {
         <PrivateRoute>
           <AdminDashboard/>
@@ -36,6 +42,11 @@ function App() {
       <Route path ='/staff/dashboard' element = {
         <PrivateRoute>
           <StaffDashboard/>
+        </PrivateRoute>
+      }/>
+      <Route path ='/admin/staff-details' element = {
+        <PrivateRoute>
+          <StaffManagement/>
         </PrivateRoute>
       }/>
     </Routes>

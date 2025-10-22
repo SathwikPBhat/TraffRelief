@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SelectedVictimCard from "../components/SelectedVictimCard";
 import Footer from "../components/Footer";
 import AdminNavbar from "../components/AdminNavbar";
 import Pagination from "../components/Pagination";
 import AddStaffModal from '../components/AddStaffModal';
+import { toast } from "react-toastify";
 
 function StaffManagement() {
   const [selectedVictims, setSelectedVictims] = useState([
@@ -13,27 +14,57 @@ function StaffManagement() {
     "Rahul Gandhi",
   ]);
   const [currPage, setCurrPage] = useState(1);
+  const adminId = localStorage.getItem("id");
+  const token = localStorage.getItem("token");
+  const [staffData, setStaffData] = useState([]);
 
-  const StaffData = [
-    { name: "Alice", role: "Admin", center: "Mumbai", status: "Active" },
-    { name: "Bob", role: "Manager", center: "Delhi", status: "Inactive" },
-    { name: "Charlie", role: "Staff", center: "Pune", status: "Active" },
-    { name: "David", role: "Intern", center: "Goa", status: "Active" },
-    { name: "Eva", role: "Lead", center: "Bangalore", status: "Active" },
-    { name: "Frank", role: "Staff", center: "Kolkata", status: "Inactive" },
-    { name: "Grace", role: "Admin", center: "Chennai", status: "Active" },
-    { name: "Hank", role: "Intern", center: "Hyderabad", status: "Active" },
-  ];
+  const fetchStaffDetails = async()=>{
+    try{
+        const res = await fetch(`http://localhost:5000/admin/view-staffs/${adminId}`,{
+          method : "GET",
+          headers:{
+            Authorization : `Bearer ${token}`
+          },
+        })
+        const data = await res.json();
+        if(res.status == 200){
+          setStaffData(data.staffs);
+          console.log(data.staffs);
+        }
+        else{
+          toast.error(data.message,{toastId: "fetchStaffError"});
+        }
+      }
+      catch(err){
+        toast.error(err.message,{toastId: "fetchStaffError"});
+      }
+    }
+  
+  useEffect(()=>{
+    fetchStaffDetails();
+    console.log(staffData);
+  },[adminId, token])
+
+  // const StaffData = [
+  //   { name: "Alice", role: "Admin", center: "Mumbai", status: "Active" },
+  //   { name: "Bob", role: "Manager", center: "Delhi", status: "Inactive" },
+  //   { name: "Charlie", role: "Staff", center: "Pune", status: "Active" },
+  //   { name: "David", role: "Intern", center: "Goa", status: "Active" },
+  //   { name: "Eva", role: "Lead", center: "Bangalore", status: "Active" },
+  //   { name: "Frank", role: "Staff", center: "Kolkata", status: "Inactive" },
+  //   { name: "Grace", role: "Admin", center: "Chennai", status: "Active" },
+  //   { name: "Hank", role: "Intern", center: "Hyderabad", status: "Active" },
+  // ];
 
   const deleteVictim = (nameToDelete) =>
     setSelectedVictims((currentVictims) =>
       currentVictims.filter((name) => name !== nameToDelete)
     );
 
-  const totalPages = Math.ceil(StaffData.length / 4);
+  const totalPages = Math.ceil(staffData.length / 4);
   const startIdx = (currPage - 1) * 4;
   const endIdx = startIdx + 4;
-  const visibleRows = StaffData.slice(startIdx, endIdx);
+  const visibleRows = staffData.slice(startIdx, endIdx);
 
   const handlePageChange = (pageNo) => {
     if (pageNo >= 1 && pageNo <= totalPages) setCurrPage(pageNo);
@@ -48,7 +79,7 @@ function StaffManagement() {
           <div className="w-full flex flex-col gap-2">
             {/* search + filter by */}
             <div className="w-full py-2 flex justify-between items-center">
-              <div className="flex flex-col">
+              <div className="flex flex-col w-1/2">
                 {/* search */}
                 <label htmlFor="search-staff">Search Staff</label>
                 <input
@@ -105,9 +136,9 @@ function StaffManagement() {
                 <thead className="h-14 bg-stone-100 text-black font-['QuickSand'] font-semibold">
                   <tr>
                     <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Role</th>
+                    <th className="px-4 py-3 text-left hidden sm:table-cell">Role</th>
                     <th className="px-4 py-3 text-left">Center</th>
-                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-left hidden sm:table-cell">Status</th>
                     <th className="px-4 py-3 text-left">Action</th>
                   </tr>
                 </thead>
@@ -119,15 +150,15 @@ function StaffManagement() {
                         className="border-t border-gray-200 hover:bg-gray-50"
                       >
                         <td className="py-3 px-4 text-sm text-gray-700">
-                          {val.name}
+                          {val.fullName}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
+                        <td className="py-3 px-4 text-sm text-gray-700 hidden sm:table-cell">
                           {val.role}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
-                          {val.center}
+                        <td className="py-3 px-4 text-sm text-gray-700 ">
+                          {val.centre.centreName}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-700">
+                        <td className="py-3 px-4 text-sm text-gray-700 hidden sm:table-cell">
                           {val.status}
                         </td>
                         <td className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">

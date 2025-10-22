@@ -25,6 +25,14 @@ const staffSchema = new mongoose.Schema({
         required:true,
         unique:true  
     },
+    status:{
+        type:String,
+        enum:["active","inactive"],
+        default:"active"
+    },
+    role:{
+        type:String,
+    },
     centre:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Centre",
