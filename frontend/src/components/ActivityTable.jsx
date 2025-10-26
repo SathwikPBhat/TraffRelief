@@ -22,14 +22,16 @@ function ActivityTable({tableHeaders,tableData}) {
                         key={i}
                         className="border-t border-slate-600 hover:bg-gray-50"
                       >
-                        <td className="py-3 px-4 text-sm text-slate-900">
-                          {val.date}
-                        </td>
+                      
+                      <td className="py-3 px-4 text-sm text-slate-900">
+                        {isNaN(new Date(val.timestamp)) ? val.timestamp : new Date(val.timestamp).toLocaleString('en-GB', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                      </td>
+                      
                         <td className="py-3 px-4 text-sm text-slate-900">
                           {val.activity}
                         </td>
                         <td className="py-3 px-4 text-sm text-slate-900">
-                          {val.details}
+                          {val.description}
                         </td>
                         
                       </tr>

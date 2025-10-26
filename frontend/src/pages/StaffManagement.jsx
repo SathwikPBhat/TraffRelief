@@ -17,6 +17,9 @@ function StaffManagement() {
   const adminId = localStorage.getItem("id");
   const token = localStorage.getItem("token");
   const [staffData, setStaffData] = useState([]);
+  const statuses = ["active", "inactive"];
+  const [roles, setRoles] = useState([]);
+  const [centres, setCentres] = useState([]);
 
   const fetchStaffDetails = async()=>{
     try{
@@ -39,32 +42,116 @@ function StaffManagement() {
         toast.error(err.message,{toastId: "fetchStaffError"});
       }
     }
+  const getDistinctRoles = async()=>{
+    try{
+        const res = await fetch(`http://localhost:5000/stats/distinct-roles/${adminId}`,{
+          method : "GET",
+          headers:{
+            Authorization : `Bearer ${token}`
+          },
+        })
+        const data = await res.json();
+        if(res.status == 200){
+          setRoles(data.roles);
+        }
+        else{
+          toast.error(data.message,{toastId: "fetchRoleError"});
+        }
+      }
+      catch(err){
+        toast.error(err.message,{toastId: "fetchRoleError"});
+      }
+    }
   
+  const getCentreDetails = async() =>{
+      try{
+          const res = await fetch(`http://localhost:5000/stats/centre-details/${adminId}`,{
+              method:"GET",
+              headers:{
+                  'Authorization':`Bearer ${token}`,
+                  'Content-Type':'application/json'
+              }
+          })
+          const data = await res.json();
+          if(res.status == 200){
+              setCentres(data.centres);
+          }
+          else{
+              toast.error(data.message, {toastId :"centre fetch error"});
+          }
+      }
+      catch(err){
+          toast.error(err.message);
+      }
+  }
   useEffect(()=>{
     fetchStaffDetails();
-    console.log(staffData);
+    getDistinctRoles();
+    getCentreDetails();
   },[adminId, token])
 
-  // const StaffData = [
-  //   { name: "Alice", role: "Admin", center: "Mumbai", status: "Active" },
-  //   { name: "Bob", role: "Manager", center: "Delhi", status: "Inactive" },
-  //   { name: "Charlie", role: "Staff", center: "Pune", status: "Active" },
-  //   { name: "David", role: "Intern", center: "Goa", status: "Active" },
-  //   { name: "Eva", role: "Lead", center: "Bangalore", status: "Active" },
-  //   { name: "Frank", role: "Staff", center: "Kolkata", status: "Inactive" },
-  //   { name: "Grace", role: "Admin", center: "Chennai", status: "Active" },
-  //   { name: "Hank", role: "Intern", center: "Hyderabad", status: "Active" },
-  // ];
 
   const deleteVictim = (nameToDelete) =>
     setSelectedVictims((currentVictims) =>
       currentVictims.filter((name) => name !== nameToDelete)
     );
 
-  const totalPages = Math.ceil(staffData.length / 4);
+  const [filters, setFilters] = useState({
+    centre: '',
+    role: '',
+    status: ''
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const handleFilters = (e) =>{
+    const {name, value} = e.target;
+    setFilters((prev)=>({
+      ...prev,
+      [name] : value
+    }))
+    setCurrPage(1);
+  }
+
+  const handleSearch = (e) =>{
+    const query = e.target.value;
+    const finalQuery = query.trim().toLowerCase();
+    setSearchQuery(finalQuery);
+    setCurrPage(1);
+  }
+
+  const getFilteredData = () =>{
+     let filtered = staffData;
+     if(searchQuery.trim()){
+      filtered = filtered.filter((staff) => {
+        return staff.staffId.toLowerCase().includes(searchQuery) || staff.fullName.toLowerCase().includes(searchQuery)
+      })
+     }
+     if(filters.centre){
+      filtered = filtered.filter((staff) => staff.centre === filters.centre)
+     }
+     if(filters.role){
+      filtered = filtered.filter((staff) => staff.role === filters.role)
+     }
+     if(filters.status){
+      filtered = filtered.filter((staff) => staff.status === filters.status)
+     }
+     return filtered;
+  }
+
+  const filteredData = getFilteredData();
+  const clearFilters = () =>{
+    setFilters({
+      centre:'',
+      role:'',
+      status:''
+    });
+    setSearchQuery('');
+  }
+
+  const totalPages = Math.ceil(filteredData.length / 4);
   const startIdx = (currPage - 1) * 4;
   const endIdx = startIdx + 4;
-  const visibleRows = staffData.slice(startIdx, endIdx);
+  const visibleRows = filteredData.slice(startIdx, endIdx);
 
   const handlePageChange = (pageNo) => {
     if (pageNo >= 1 && pageNo <= totalPages) setCurrPage(pageNo);
@@ -84,40 +171,54 @@ function StaffManagement() {
                 <label htmlFor="search-staff">Search Staff</label>
                 <input
                   type="search"
-                  name="staff"
-                  placeholder="Name,id.."
-                  className="h-8 rounded-xl p-2 border border-teal-700"
+                  name="search"
+                  placeholder="Name,id.." value = {searchQuery} onChange={handleSearch}
+                  className="h-8 rounded-xl p-2 border border-teal-700 bg-gray-200"
                 />
               </div>
-              <button className="flex justify-center items-center text-white bg-teal-600 font-['QuickSand'] h-6 rounded-xl p-4 border border-gray-800">
-                Search
+              <button onClick = {clearFilters} className="flex justify-center items-center text-white bg-teal-600 font-['QuickSand'] h-6 rounded-xl p-4 border border-gray-800">
+                Clear Filters
               </button>
             </div>
 
             <div className="w-full flex flex-col justify-around">
               {/* filter by */}
               <p>Filter by</p>
-              <div className="w-1/2 flex items-center justify-between gap-2 ">
+              <div className="w-full grid gap-4 lg:grid-cols-3 md:grid-cols-3 grid-cols-1 ">
                 <select
-                  name=""
-                  id="role1"
-                  className="w-1/3 border border-teal-700 rounded-xl  px-2 py-1 "
+                  name="centre" onChange={handleFilters} 
+                  className="border border-teal-700 rounded-xl  px-2 py-1 bg-gray-200"
                 >
-                  <option value="">Role</option>
+                  <option value="">--Select a Centre--</option>
+                    {
+                    centres.map((centre, idx) => (
+                      <option key = {idx} value = {centre}>{centre}</option>
+                    )
+                  )
+                  }
                 </select>
                 <select
-                  name=""
-                  id="role2"
-                  className="w-1/3 border border-teal-700 rounded-xl  px-2 py-1 "
+                  name="role" onChange={handleFilters} value = {filters.role}
+                  className=" border border-teal-700 rounded-xl  px-2 py-1 bg-gray-200"
                 >
-                  <option value="">Role</option>
+                  <option value="">--Select a Role--</option>
+                  {
+                    roles.map((role, idx) => (
+                      <option key = {idx} value = {role}>{role}</option>
+                    )
+                  )
+                  }
                 </select>
                 <select
-                  name=""
-                  id="role3"
-                  className="w-1/3 border border-teal-700 rounded-xl  px-2 py-1 "
+                  name="status" onChange={handleFilters} value = {filters.status}
+                  className=" border border-teal-700 rounded-xl px-2 py-1 bg-gray-200"
                 >
-                  <option value="">Role</option>
+                  <option value="">--Select Status--</option>
+                  {
+                    statuses.map((status, idx) => (
+                      <option key = {idx} value = {status}>{status}</option>
+                    ))
+                  }
                 </select>
               </div>
             </div>

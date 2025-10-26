@@ -4,7 +4,7 @@ const express = require('express');
 const app = express();
 const adminRoutes = require('./routes/admin.js');
 const loginRoute = require('./routes/login.js');
-
+const statsRoute = require('./routes/stats.js')
 const connectDB = require('./db/connection.js');
 
 app.use(cors());
@@ -19,3 +19,4 @@ app.listen(process.env.PORT || 5000, () => {
 
 app.use('/admin', adminRoutes);
 app.use('/user', loginRoute);
+app.use('/stats', statsRoute);

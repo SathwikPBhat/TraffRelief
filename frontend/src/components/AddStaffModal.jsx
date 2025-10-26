@@ -1,10 +1,13 @@
 import React,{useState} from 'react'
+import { useEffect } from 'react';
 import { IoCloseCircleOutline } from "react-icons/io5";
 import { toast } from 'react-toastify';
 
 function AddStaffModal({showModal}) {
     const [loading, setLoading] = useState(false);
+    const [centreData, setCentreData] = useState([]);
     const adminId = localStorage.getItem("id");
+    const token = localStorage.getItem("token");
     const [formData, setFormData] = useState({
         id: adminId, 
         fullName: '',
@@ -20,6 +23,32 @@ function AddStaffModal({showModal}) {
         const { name, value } = e.target;
         setFormData(prev => ({...prev, [name]: value}));
     }
+
+    const getCentreDetails = async() =>{ 
+        try{
+            const res = await fetch(`http://localhost:5000/stats/centre-details/${adminId}`,{
+                method:"GET",
+                headers:{
+                    Authorization : `Bearer ${token}`
+                }
+            })
+            const data = await res.json();
+            if(res.status == 200){
+                setCentreData(data.centresUnderAdmin);
+                console.log(data.centresUnderAdmin)
+            }
+            else{
+                toast.error(data.message, {toastId: "centreFetchError"});
+            }
+        }   
+        catch(err){
+            toast.error(err.message, {toastId: "centreFetchError"});
+        }
+    }
+    useEffect(()=>{
+        getCentreDetails();
+    },[token, adminId]);
+
 
     const handleSubmit= async(e)=>{
         e.preventDefault();
@@ -142,10 +171,13 @@ function AddStaffModal({showModal}) {
                         <label htmlFor="center">Center</label>
                         <select name="center" value={formData.center} onChange={handleChange} className='w-full p-2 border border-teal-800 rounded-xl mb-4'>    
                             <option value="">----Select A Center----</option>
-                            <option value="mumbai">Mumbai</option>
-                            <option value="bangalore">Bangalore</option>
-                            <option value="bengal">Bengal</option>
-                            <option value="bihar">Bihar</option>
+                            {
+                                centreData.map((centre, idx) => {
+                                    return (
+                                        <option key = {idx} value={centre.centreId}>{centre.centreName}</option>
+                                    )
+                                })
+                            }
                         </select>
                     </div>
                     <div className='flex flex-col gap-2 mb-4 lg:col-span-2'>

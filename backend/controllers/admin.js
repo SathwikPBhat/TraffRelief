@@ -1,6 +1,10 @@
 const Staff = require('../models/staff.js');
 const Admin = require('../models/admin.js');
 const Centre = require('../models/centre.js');
+const ActivityLog = require('../models/activityLog.js');
+const centre = require('../models/centre.js');
+const activityLog = require('../models/activityLog.js');
+
 const viewStaffs = async(req, res) =>{
     try{
         const {adminId} = req.params;
@@ -39,7 +43,7 @@ const handleAddStaff = async (req, res) => {
             const lastId = lastStaff.staffId.substring(2);
             idNo = parseInt(lastId) + 1;
         }
-        const centerDoc = await Centre.findOne({centreName: center});
+        const centerDoc = await Centre.findOne({centreId: center});
         if(!centerDoc){
             return res.status(404).json({message : "Centre not found"});
         }   
@@ -61,6 +65,13 @@ const handleAddStaff = async (req, res) => {
             return res.status(409).json({ message: 'Staff with this email already exists.' });
         }
         const createdStaff = await Staff.create(newStaff);
+        const log = {
+            adminId : adminDoc._id,
+            staffId: createdStaff._id,
+            activity: `New Staff created`,
+            description: `New Staff (${createdStaff.fullName}) added to centre ${centerDoc.centreName}`,
+        }
+        const createdLog = await activityLog.create(log);
         res.status(201).json({message : `Staff created successfully with id: ${createdStaff.staffId}`});
 
     }
@@ -69,6 +80,39 @@ const handleAddStaff = async (req, res) => {
     }
 }
 
+const getActivityLogs = async(req, res) => {
+    try{
+        const {adminId} = req.params;
+        if(!adminId){
+            return res.status(400).json({message : "Admin ID is required"});
+        }
+        const foundAdmin = await Admin.findOne({adminId: adminId});
+        if(!foundAdmin){
+            return res.status(404).json({message : "Admin not found"});
+        }
+        const log = await ActivityLog.find({adminId: foundAdmin._id}).sort({timestamp:-1});
+        return res.status(200).json({log: log, message: "Log details retrieval successful"});
+    }
+    catch(err){
+        return res.status(500).json({message: err.message});
+    }
+}
+
+const markAllNotificationsRead = async (req, res) => {
+  try {
+    const {adminId} = req.params;
+    if (!adminId) return res.status(400).json({message: 'Admin id is required'});
+
+    const admin = await Admin.findOne({adminId});
+    if (!admin) return res.status(404).json({message: 'Admin not found'});
+
+    const result = await ActivityLog.updateMany({}, { $set: { readStatus: true } });
+    return res.status(200).json({ message: 'Marked as read' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports={
-    handleAddStaff, viewStaffs
+    handleAddStaff, viewStaffs, getActivityLogs, markAllNotificationsRead
 }

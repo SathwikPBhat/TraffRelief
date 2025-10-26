@@ -18,6 +18,11 @@ const centreSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    comesUnder:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Admin",
+        required:true
+    },
     certificate:{
         //abhishek complete this
     }
