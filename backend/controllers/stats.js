@@ -1,6 +1,7 @@
 const Admin = require('../models/admin.js');
 const Centre = require('../models/centre.js');
 const Staff = require('../models/staff.js');
+const Victim = require('../models/victim.js');
 
 const getStaffDetails = async(req, res) => {
     try{
@@ -62,6 +63,31 @@ const getDistinctRoles = async(req, res) =>{
     }
 }
 
+const getVictimDetails = async(req, res) =>{
+    try{
+        const {adminId} = req.params;
+        if(!adminId){
+            return res.status(401).json({message: "Admin id is required"});
+        }
+        const foundAdmin = await Admin.findOne({adminId: adminId});
+        if(!foundAdmin){
+            return res.status(404).json({message: "Admin not found"});  
+        }
+        const victims = await Victim.find({admin: foundAdmin._id});
+        const total = victims.length;
+        let active = 0, missing = 0, released = 0, deceased = 0;
+        victims.forEach((victim)=>{
+            if(victim.status === 'active') active++;
+            else if(victim.status === 'missing') missing++;
+            else if(victim.status === 'released') released++;
+            else if(victim.status === 'deceased') deceased++;   
+        })
+        return res.status(200).json({total: total, active: active, missing: missing, released: released, deceased: deceased});
+    }
+    catch(err){
+            return res.status(500).json({message: err.message});
+    }
+}
 
 
-module.exports = {getStaffDetails, getCentreDetails, getDistinctRoles}
+module.exports = {getStaffDetails, getCentreDetails, getDistinctRoles, getVictimDetails};

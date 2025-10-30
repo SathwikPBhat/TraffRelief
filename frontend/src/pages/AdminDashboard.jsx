@@ -22,7 +22,13 @@ function AdminDashboard() {
         working: 0,
     })
     const [activityData, setActivityData] = useState([]);
-
+    const [victimData, setVictimData] = useState({
+        total:0,
+        active:0,
+        missing:0,
+        released:0,
+        deceased:0
+    });
     const token = localStorage.getItem("token");
     const id = localStorage.getItem("id");
 
@@ -48,7 +54,33 @@ function AdminDashboard() {
             toast.error(err.message, {toastId:"fetchLogError"});
         }
     }
+    const getVictimDetails = async() =>{
+        try{
+            const res = await fetch(`http://localhost:5000/stats/victim-details/${id}`,{
+                method:"GET",
+                headers:{
+                    'Authorization':`Bearer ${token}`
+                }
+            })
+            const data = await res.json();
 
+            if(res.status == 200){
+                setVictimData({
+                    total: data.total,
+                    active: data.active,
+                    missing: data.missing,
+                    released: data.released,
+                    deceased: data.deceased
+                });
+            }
+            else{
+                console.log(data.message);
+            }
+        }
+        catch(err){
+            console.log(err.message);
+        }
+}
     const getCentreDetails = async() =>{
         try{
             const res = await fetch(`http://localhost:5000/stats/centre-details/${id}`,{
@@ -101,6 +133,7 @@ function AdminDashboard() {
         getCentreDetails();
         getStaffDetails();
         getActivityData();
+        getVictimDetails();
     },[token, id])
 
   return (
@@ -117,9 +150,11 @@ function AdminDashboard() {
                     <FaExternalLinkAlt className='hover:cursor-pointer hover:scale-110'/>
                 </div>
                 <div className='flex flex-col justify-evenly'>
-                <p>Total: </p>
-                <p>Released: </p>
-                <p>Progressed: </p>
+                <p>Total: {victimData.total}</p>
+                <p>Active: {victimData.active}</p>
+                <p>Released: {victimData.released}</p>
+                {victimData.missing > 0 && (<p>Missing: {victimData.missing}</p>)}
+                {victimData.deceased > 0 && (<p>Deceased: {victimData.deceased}</p>)}
                 </div>
                 </div>
 
