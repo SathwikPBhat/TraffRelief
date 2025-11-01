@@ -34,21 +34,23 @@ function AdminNavbar() {
     }
   };
 
-  const handleDrawerClose= async() =>{
+  const handleDrawerClose = async () => {
     setNotifOpen(false);
-    try{
-      await fetch(`http://localhost:5000/admin/mark-all-notifications-read/${id}`,{
-        method: "PATCH",
-        headers:{
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+    try {
+      await fetch(
+        `http://localhost:5000/admin/mark-all-notifications-read/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      })
+      );
+    } catch (err) {
+      console.log("Failed to mark as read:", err.message);
     }
-    catch(err){
-      console.log('Failed to mark as read:', err.message);
-    }
-  }
+  };
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {

@@ -4,6 +4,7 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 import ActivityTable from '../components/ActivityTable';
 import Footer from '../components/Footer';
 import {toast} from "react-toastify"
+import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
 
@@ -13,6 +14,7 @@ function AdminDashboard() {
     //     { date: "1-10-2025", activity: "Victim Assigned",details: "Victim name: Monish Malpe"},
     //     { date: "4-10-2025", activity: "Victim Assigned",details: "Victim name: Arnav Shetty"}
     // ];
+    const navigate = useNavigate();
     const [centreData, setCentreData] = useState({
         total : 0,
         withStaff : 0
@@ -43,7 +45,7 @@ function AdminDashboard() {
 
            const data = await res.json();
            if(res.status == 200){
-            setActivityData(data.log);
+            setActivityData(data.log.splice(0,5));
             
            }
            else{
@@ -147,7 +149,7 @@ function AdminDashboard() {
                 <div className='p-2 rounded-xl border border-gray-400 shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] flex flex-col gap-2'>
                 <div className='flex justify-between items-center'>
                     <p className='font-bold text-lg'>Victims</p>
-                    <FaExternalLinkAlt className='hover:cursor-pointer hover:scale-110'/>
+                    <FaExternalLinkAlt onClick={()=> navigate("/admin/victims")} className='hover:cursor-pointer hover:scale-110'/>
                 </div>
                 <div className='flex flex-col justify-evenly'>
                 <p>Total: {victimData.total}</p>
@@ -161,7 +163,7 @@ function AdminDashboard() {
                 <div className='p-2 rounded-xl border border-gray-400 shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] flex flex-col gap-2'>
                 <div className='flex justify-between items-center'>
                     <p className='font-bold text-lg'>Staff</p>
-                    <FaExternalLinkAlt className='hover:cursor-pointer hover:scale-110'/>
+                    <FaExternalLinkAlt onClick = {()=>navigate("/admin/staff-details")} className='hover:cursor-pointer hover:scale-110'/>
                 </div>
                 <div className='flex flex-col justify-evenly'>
                 <p>Total: {staffData.total}</p>

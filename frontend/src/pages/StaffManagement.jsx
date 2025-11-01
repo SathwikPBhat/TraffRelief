@@ -5,6 +5,7 @@ import AdminNavbar from "../components/AdminNavbar";
 import Pagination from "../components/Pagination";
 import AddStaffModal from '../components/AddStaffModal';
 import { toast } from "react-toastify";
+import {fetchDistinctRoles, fetchCentreDetails} from "../utils/CommonFetches";
 
 function StaffManagement() {
   const [selectedVictims, setSelectedVictims] = useState([
@@ -42,52 +43,11 @@ function StaffManagement() {
         toast.error(err.message,{toastId: "fetchStaffError"});
       }
     }
-  const getDistinctRoles = async()=>{
-    try{
-        const res = await fetch(`http://localhost:5000/stats/distinct-roles/${adminId}`,{
-          method : "GET",
-          headers:{
-            Authorization : `Bearer ${token}`
-          },
-        })
-        const data = await res.json();
-        if(res.status == 200){
-          setRoles(data.roles);
-        }
-        else{
-          toast.error(data.message,{toastId: "fetchRoleError"});
-        }
-      }
-      catch(err){
-        toast.error(err.message,{toastId: "fetchRoleError"});
-      }
-    }
   
-  const getCentreDetails = async() =>{
-      try{
-          const res = await fetch(`http://localhost:5000/stats/centre-details/${adminId}`,{
-              method:"GET",
-              headers:{
-                  'Authorization':`Bearer ${token}`,
-                  'Content-Type':'application/json'
-              }
-          })
-          const data = await res.json();
-          if(res.status == 200){
-              setCentres(data.centres);
-          }
-          else{
-              toast.error(data.message, {toastId :"centre fetch error"});
-          }
-      }
-      catch(err){
-          toast.error(err.message);
-      }
-  }
   useEffect(()=>{
     fetchStaffDetails();
-    getDistinctRoles();
-    getCentreDetails();
+    fetchDistinctRoles(adminId, token, setRoles);
+    fetchCentreDetails(adminId, token, setCentres);
   },[adminId, token])
 
 
