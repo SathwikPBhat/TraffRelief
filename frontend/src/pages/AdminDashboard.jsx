@@ -7,13 +7,6 @@ import {toast} from "react-toastify"
 import { useNavigate } from 'react-router-dom';
 
 function AdminDashboard() {
-
-    // const ActivityData = [
-    //     { date: "12-10-2025", activity: "Victim Assigned",details: "Victim name: Shreehari V Bhat"},
-    //     { date: "10-10-2025", activity: "Victim Assigned",details: "Victim name: Abhishek Holla"},
-    //     { date: "1-10-2025", activity: "Victim Assigned",details: "Victim name: Monish Malpe"},
-    //     { date: "4-10-2025", activity: "Victim Assigned",details: "Victim name: Arnav Shetty"}
-    // ];
     const navigate = useNavigate();
     const [centreData, setCentreData] = useState({
         total : 0,

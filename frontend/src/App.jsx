@@ -9,6 +9,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import VictimManagementForAdmin from './pages/VictimManagementForAdmin';
 import VictimManagementForStaff from './pages/VictimManagementForStaff';
 import AdminProfile from './pages/AdminProfile';
+import PageNotFound from './pages/PageNotFound';
 
 function App() {
 
@@ -28,11 +29,6 @@ function App() {
           <AdminDashboard/>
         </PrivateRoute>
       }/>
-      <Route path ='/staff/dashboard' element = {
-        <PrivateRoute>
-          <StaffDashboard/>
-        </PrivateRoute>
-      }/>
       <Route path ='/admin/staff-details' element = {
         <PrivateRoute>
           <StaffManagement/>
@@ -48,7 +44,12 @@ function App() {
           <VictimManagementForStaff/>
         </PrivateRoute>
       }/>
-
+      <Route path ='/staff/dashboard' element = {
+        <PrivateRoute>
+          <StaffDashboard/>
+        </PrivateRoute>
+      }/>
+      <Route path = '*' element ={<PageNotFound/>}/>
     </Routes>
     </>
   )
