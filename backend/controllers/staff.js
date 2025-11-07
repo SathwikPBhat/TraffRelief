@@ -19,4 +19,21 @@ const getVictims = async(req, res) =>{
     }
 }
 
-module.exports = {getVictims}
+const getVictimById = async(req, res) =>{
+    try{
+        const {victimId} = req.params;
+        if(!victimId){
+            return res.status(401).json({message: "VictimId is required"});
+        }
+        const victim = await Victim.findOne({victimId}).populate('centre').populate('staff');
+        if(!victim){
+            return res.status(404).json({message: "No victim found"});
+        }
+        return res.status(200).json({message: "Victim data retrieval successful", victim: victim});
+    }
+    catch(err){
+        return res.status(500).json({message: err.message});
+    }
+}
+
+module.exports = {getVictims, getVictimById};

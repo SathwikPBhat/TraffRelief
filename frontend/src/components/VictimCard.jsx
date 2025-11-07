@@ -1,8 +1,13 @@
 import React from 'react';
 import golimaams from '../assets/golimaams.png';
 import { FaExternalLinkAlt } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 function VictimCard({victimData}) {
+    const navigate = useNavigate();
+    const handleNavigate = () =>{
+        navigate(`/victim-profile/${victimData.victimId}`);
+    }
   return (
     <div className='w-full rounded-xl border border-teal-600 shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] bg-white flex flex-col sm:flex-row p-4 gap-4 justify-between font-[QuickSand] relative'>
         <div className='flex gap-4 w-full'>
@@ -30,7 +35,7 @@ function VictimCard({victimData}) {
                 <p className='text-xl font-semibold sm:text-md xs:text-sm'>Walking</p>
             </div>
         </div>
-        <FaExternalLinkAlt className='absolute right-4 top-2' />
+        <FaExternalLinkAlt className='absolute right-4 top-2' onClick = {handleNavigate}/>
     </div>
   );
 }
