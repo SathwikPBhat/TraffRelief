@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const ResultSchema = new Schema({
+    timestamp: { type: Date, default: Date.now },
   victim_id: { type: String, default: null },
   previous_audit_used: { type: Boolean, required: true },
   domain_evaluations: {
