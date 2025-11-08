@@ -84,8 +84,8 @@ const victimSchema = new mongoose.Schema({
     },
     status:{
         type: String,
-        enum: ['active','released','missing','deceased'],
-        default: 'active',
+        enum: ['active','released','missing','deceased','unassigned'],
+        default: 'unassigned',
     },
     caseDetailsForAdmin:{
         type: caseDetailsForAdminSchema,

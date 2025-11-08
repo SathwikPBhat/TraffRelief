@@ -11,12 +11,14 @@ import VictimManagementForStaff from "./pages/VictimManagementForStaff";
 import AdminProfile from "./pages/AdminProfile";
 import PageNotFound from "./pages/PageNotFound";
 import VictimProfile from "./pages/VictimProfile";
+import Audit from "./pages/Audit";
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
+        <Route path = "/audit" element= {<Audit/>}/>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route

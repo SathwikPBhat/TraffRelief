@@ -4,13 +4,14 @@ import Footer from '../components/Footer'
 import StaffNavbar from '../components/StaffNavbar'
 import { FaExternalLinkAlt } from "react-icons/fa";
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function StaffDashboard() {
     const [victimData, setVictimData] = useState([]);
 
     const id = localStorage.getItem("id");
     const token = localStorage.getItem("token");
-
+    const navigate = useNavigate();
     const getVictims = async() =>{
       try{
         const res = await fetch(`http://localhost:5000/staff/get-victims/${id}`,{
@@ -53,7 +54,7 @@ function StaffDashboard() {
     <div className='flex flex-col justify-between gap-2 mb-4'>
         <div className='flex items-center justify-between'>
             <p className="font-medium text-3xl font-['QuickSand']">Assigned Victims</p>
-            <FaExternalLinkAlt className='hover:cursor-pointer hover:scale-110'/>
+            <FaExternalLinkAlt onClick={()=>navigate("/staff/victim-details")} className='hover:cursor-pointer hover:scale-110'/>
         </div>
         <Table tableHeaders={["Name","ID","Status","Action"]} tableData = {victimData} />
     </div>

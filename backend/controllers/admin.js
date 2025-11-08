@@ -86,11 +86,9 @@ const handleAddStaff = async (req, res) => {
       description: `New Staff (${createdStaff.fullName}) added to centre ${centerDoc.centreName}`,
     };
     const createdLog = await activityLog.create(log);
-    res
-      .status(201)
-      .json({
-        message: `Staff created successfully with id: ${createdStaff.staffId}`,
-      });
+    res.status(201).json({
+      message: `Staff created successfully with id: ${createdStaff.staffId}`,
+    });
   } catch (err) {
     return res
       .status(500)
@@ -180,7 +178,7 @@ const parseToArray = (v) => {
 
 const addVictim = async (req, res) => {
   try {
-    console.log("req.body:", req.body); 
+    console.log("req.body:", req.body);
     console.log("req.file:", req.file);
 
     const { adminId } = req.params;
@@ -203,7 +201,7 @@ const addVictim = async (req, res) => {
 
     if (!fullName || !age || !gender || !traffickingType || !centre) {
       return res.status(400).json({
-        message: "All fields are required"
+        message: "All fields are required",
       });
     }
 
@@ -270,6 +268,77 @@ const addVictim = async (req, res) => {
   }
 };
 
+const getUnassignedVictims = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    if (!adminId) {
+      return res.status(400).json({ message: "Admin ID is required" });
+    }
+    const foundAdmin = await Admin.findOne({ adminId: adminId });
+    if (!foundAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    const victims = await Victim.find({
+      admin: foundAdmin._id,
+      status: "unassigned",
+    })
+      .populate("centre")
+      .populate("staff");
+    return res
+      .status(200)
+      .json({ message: "Data retrieval succesful", victims: victims });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const assignVictims = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const { staffId, victimIds } = req.body;
+    if (!staffId || !Array.isArray(victimIds) || victimIds.length === 0)
+      return res.status(400).json({ message: "staffId & victimIds required" });
+    const staff = await Staff.findOne({ staffId });
+    if (!staff) return res.status(404).json({ message: "Staff not found" });
+    const victimsToAssign = await Victim.find({ victimId: { $in: victimIds } });
+
+    if (victimsToAssign.length !== victimIds.length) {
+      return res.status(404).json({
+        message: "One or more victims not found",
+      });
+    }
+
+    const alreadyAssigned = victimsToAssign.filter(
+      (v) => v.status !== "unassigned" || v.staff != null
+    );
+
+    if (alreadyAssigned.length > 0) {
+      const assignedNames = alreadyAssigned
+        .map((v) => `${v.fullName} (${v.victimId})`)
+        .join(", ");
+      return res.status(400).json({
+        message: `The following victims are already assigned: ${assignedNames}`,
+      });
+    }
+    const result = await Victim.updateMany(
+      { victimId: { $in: victimIds } },
+      { $set: { staff: staff._id, status: "active" } }
+    );
+    await ActivityLog.create({
+      adminId: (await Admin.findOne({ adminId }))._id,
+      staffId: staff._id,
+      activity: "Victim assignment",
+      description: `Assigned ${victimIds.length} victims to ${staff.fullName}`,
+      readStatus: false,
+    });
+    return res
+      .status(200)
+      .json({ message: "Assigned", modified: result.modifiedCount });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   handleAddStaff,
   viewStaffs,
@@ -277,4 +346,6 @@ module.exports = {
   markAllNotificationsRead,
   getVictimDetails,
   addVictim,
+  getUnassignedVictims,
+  assignVictims,
 };

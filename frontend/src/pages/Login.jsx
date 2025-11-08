@@ -38,6 +38,7 @@ function Login() {
           toast.success(data.message, {toastId : "loginSuccess"});
           localStorage.setItem("token", data.token);
           localStorage.setItem("id", loginData.id);
+          localStorage.setItem("role", loginData.role);
           if(loginData.role === 'admin'){
             navigate('/admin/dashboard');
           }

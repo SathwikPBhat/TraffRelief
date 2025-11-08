@@ -162,7 +162,7 @@ function VictimManagementForAdmin() {
     setCurrPage(1);
   };
   return (
-    <main className="w-full bg-stone-100 font-['QuickSand'] flex flex-col min-h-screen">
+    <main className="w-full bg-stone-200 font-['QuickSand'] flex flex-col min-h-screen">
       <AdminNavbar />
       <div className="flex-grow">
         <div className="w-full p-8 ">

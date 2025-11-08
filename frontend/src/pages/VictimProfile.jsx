@@ -1,5 +1,6 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import StaffNavbar from "../components/StaffNavbar";
+import AdminNavbar from "../components/AdminNavbar";
 import { useLocation, useParams } from "react-router-dom";
 import Footer from "../components/Footer";
 import golimaams from "../assets/golimaams.png";
@@ -9,8 +10,11 @@ import Table from "../components/Table";
 function VictimProfile() {
   const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
   const { victimId } = useParams();
   const [victimData, setVictimData] = useState(null);
+  
   const auditData = [
     { name: "Alice", id: "C-101",status: "Active" },
     { name: "Bob", id: "C-102", status: "Inactive" },
@@ -27,7 +31,7 @@ function VictimProfile() {
         }
       );
       const data = await res.json();
-      console.log("Response:", data);
+      
       if (res.ok) {
         setVictimData(data.victim);
       } else {
@@ -53,9 +57,9 @@ function VictimProfile() {
 
   return (
     <main className="w-full min-h-screen bg-stone-100 font-['QuickSand'] flex flex-col">
-      <StaffNavbar />
+      {role === "admin" ? <AdminNavbar/> : <StaffNavbar />}
       <div className="w-full p-8 ">
-        <div className="w-full flex items-center justify-center text-teal-700 lg:text-3xl md:text-3xl text-xl font-semibold mb-10">
+        <div className="w-full flex items-center justify-center text-teal-700 lg:text-3xl md:text-3xl text-xl font-semibold mb-14">
          {victimData.fullName}
         </div>
         <div className="w-full grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 grid-cols-1 lg:gap-4 md:gap-4 gap-12 ">
