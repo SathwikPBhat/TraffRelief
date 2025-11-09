@@ -1,7 +1,8 @@
 const Staff = require('../models/staff.js');
 const Victim = require('../models/victim.js');
 const activityLog = require("../models/activityLog.js");
-
+const {v4:uuidv4} = require('uuid');
+const Release=require('../models/release.js');
 
 const getVictims = async(req, res) =>{
     try{
@@ -129,5 +130,6 @@ const addInitialDetails = async (req, res) => {
         return res.status(500).json({ message: err.message });
     }
 };
+
 
 module.exports = {getVictims, getVictimById, getStaffById, getNotifications, addInitialDetails};

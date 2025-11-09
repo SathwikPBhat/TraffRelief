@@ -1,38 +1,82 @@
 const Audit = require('../models/audit');
+const Staff = require('../models/staff');
+const Victim = require('../models/victim');
 
-async function addAudit(req,res){
+async function addAudit(req,res,next){
     try{
         const {staffId,victimId} = req.params;
         if(!staffId||!victimId){
             return res.status(400).json({ error: "staffId and victimId parameters are required" });
         }
-        let newAuditId = "A-101";
-    const lastAudit = await Audit.findOne().sort({ createdAt: -1 });
+                // Generate a new sequential auditId. Sort by _id (monotonic) to get the latest document.
+                let newAuditId = "AUD-101";
+                const lastAudit = await Audit.findOne().sort({ _id: -1 });
 
-    if (lastAudit && lastAudit.auditId) {
-      const lastNum = parseInt(lastAudit.auditId.split("-")[1]);
-      newAuditId = `A-${lastNum + 1}`;
-    }
-        req.body.submittedBy = staffId;
-        req.body.victimId = victimId;
+                if (lastAudit && lastAudit.auditId) {
+                        const parts = String(lastAudit.auditId).split("-");
+                        const lastNum = parseInt(parts[1], 10) || 100;
+                        newAuditId = `AUD-${lastNum + 1}`;
+                }
+   
+        const staff= await Staff.findOne({staffId:staffId});
+        if(!staff){
+            return res.status(404).json({ error: "Staff not found" });
+        }
+
+        const victim= await Victim.findOne({victimId});
+        if(!victim){
+            return res.status(404).json({ error: "Victim not found" });
+        }
+        req.body.submittedBy = staff._id;
+        req.body.victimId = victim._id;
         req.body.auditId = newAuditId;
-
+        req.body.result=null;
         const getAudit=req.body;
 
-        if(!getAudit.result || typeof getAudit.result !== 'object'){
-            return res.status(400).json({ error: "Invalid or missing result field" });
-        }
+       if(!getAudit){
+            return res.status(400).json({ error: "Audit data is required" });
+       }
         
-        const allAudits=await Audit.find({ victimId: victimId });
+        const allAudits=await Audit.find({ victimId: victim._id });
         if(allAudits.length===0){
             req.body.isFirst=true;
         }else{
             req.body.isFirst=false;
         }
+        
+        // Attempt to save; on duplicate-auditId collisions (possible in concurrent requests)
+        // retry a few times by re-reading the latest auditId and incrementing.
+        let attempts = 0;
+        let newAudit = null;
+        while (attempts < 5) {
+            try {
+                req.body.auditId = newAuditId;
+                const candidate = new Audit(req.body);
+                newAudit = await candidate.save();
+                break;
+            } catch (err) {
+                // E11000 duplicate key on auditId -> recompute and retry
+                if (err && err.code === 11000 && err.keyPattern && err.keyPattern.auditId) {
+                    const latest = await Audit.findOne().sort({ _id: -1 });
+                    const parts = latest && latest.auditId ? String(latest.auditId).split('-') : [null, '100'];
+                    const lastNum = parseInt(parts[1], 10) || 100;
+                    newAuditId = `AUD-${lastNum + 1}`;
+                    attempts++;
+                    continue;
+                }
+                // other error -> rethrow
+                throw err;
+            }
+        }
 
-        const newAudit = new Audit(req.body);
-        await newAudit.save();
-        res.status(201).json(newAudit);
+        if (!newAudit) {
+            console.error('Failed to create audit after retries');
+            return res.status(500).json({ error: 'Could not create audit, please retry' });
+        }
+
+        // expose the newly created audit to the next middleware and continue the chain
+        res.locals.audit = newAudit;
+        return next();
     } catch (error) {
         console.error("Error adding audit:", error);
         res.status(500).json({ error: "Internal server error" });

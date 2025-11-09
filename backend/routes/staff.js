@@ -4,6 +4,7 @@ const router = express.Router();
 const upload = require('../middlewares/upload');
 const { addAudit } = require("../controllers/audit.js");
 const {evaluateAudit} = require("../controllers/gemini.js");
+const {createRelease,submitRelease}=require("../controllers/release.js")
 
 router.get('/get-victims/:staffId', getVictims);
 router.get('/get-victim/:victimId', getVictimById);
@@ -11,6 +12,7 @@ router.get('/get-staff/:staffId', getStaffById);
 router.get('/getNotifications/:staffId', getNotifications);
 router.post('/add-initial-details', upload.single('photo'), addInitialDetails);
 router.post('/:staffId/:victimId/add-audit', addAudit,evaluateAudit)
-
+router.post('/:staffId/:victimId/create-release', createRelease);
+router.post('/:hashId', upload.single("audio"), submitRelease);
 
 module.exports = router;
