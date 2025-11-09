@@ -12,25 +12,25 @@ function StaffNavbar() {
   const token = localStorage.getItem("token");
 
   const getNotifications = async () => {
-    //   try {
-    //     const res = await fetch(
-    //       `http://localhost:5000/admin/get-activity-details/${id}`,
-    //       {
-    //         method: "GET",
-    //         headers: {
-    //           Authorization: `Bearer ${token}`,
-    //         },
-    //       }
-    //     );
-    //     const data = await res.json();
-    //     if (res.status == 200) {
-    //       setNotifications(data.log);
-    //     } else {
-    //       console.log(data.message);
-    //     }
-    //   } catch (err) {
-    //     console.log(err.message);
-    //   }
+      try {
+        const res = await fetch(
+          `http://localhost:5000/staff/getNotifications/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (res.status == 200) {
+          setNotifications(data.log);
+        } else {
+          console.log(data.message);
+        }
+      } catch (err) {
+        console.log(err.message);
+      }
   };
 
   const handleDrawerClose = async () => {

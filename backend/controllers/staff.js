@@ -1,5 +1,7 @@
 const Staff = require('../models/staff.js');
 const Victim = require('../models/victim.js');
+const activityLog = require("../models/activityLog.js");
+
 
 const getVictims = async(req, res) =>{
     try{
@@ -53,4 +55,26 @@ const getStaffById = async(req, res) =>{
     }
 }
 
-module.exports = {getVictims, getVictimById, getStaffById};
+// Get notifications using activity logs for a specific staff member
+const getNotifications = async (req, res) => {
+  try {
+    const { staffId } = req.params;
+    if (!staffId) {
+      return res.status(400).json({ message: "Staff ID is required" });
+    }
+    const foundStaff = await Staff.findOne({ staffId: staffId });
+    if (!foundStaff) {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+    const log = await activityLog.find({ staffId: foundStaff._id }).sort({
+      timestamp: -1,
+    });
+    return res
+      .status(200)
+      .json({ log: log, message: "Log details retrieval successful" });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {getVictims, getVictimById, getStaffById, getNotifications};
