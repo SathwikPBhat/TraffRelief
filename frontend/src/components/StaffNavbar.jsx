@@ -12,26 +12,25 @@ function StaffNavbar() {
   const token = localStorage.getItem("token");
 
   const getNotifications = async () => {
-  //   try {
-  //     const res = await fetch(
-  //       `http://localhost:5000/admin/get-activity-details/${id}`,
-  //       {
-  //         method: "GET",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     const data = await res.json();
-  //     if (res.status == 200) {
-  //       setNotifications(data.log);
-  //     } else {
-  //       console.log(data.message);
-  //     }
-  //   } catch (err) {
-  //     console.log(err.message);
-  //   }
+    //   try {
+    //     const res = await fetch(
+    //       `http://localhost:5000/admin/get-activity-details/${id}`,
+    //       {
+    //         method: "GET",
+    //         headers: {
+    //           Authorization: `Bearer ${token}`,
+    //         },
+    //       }
+    //     );
+    //     const data = await res.json();
+    //     if (res.status == 200) {
+    //       setNotifications(data.log);
+    //     } else {
+    //       console.log(data.message);
+    //     }
+    //   } catch (err) {
+    //     console.log(err.message);
+    //   }
   };
 
   const handleDrawerClose = async () => {
@@ -85,6 +84,16 @@ function StaffNavbar() {
         });
   };
 
+  const getPageTitle = (path) => {
+    if (path.startsWith("/victim-profile/")) return "Victim Profile";
+    if (path.startsWith("/staff-profile/")) return "Staff Profile";
+    const map = {
+      "/staff/dashboard": "Dashboard",
+      "/staff/victim-details": "Victims",
+    };
+    return map[path] || "Staff";
+  };
+
   return (
     <>
       <div className="w-full top-0 h-16 p-4 flex justify-between items-center bg-teal-800 text-white font-medium font-['QuickSand'] lg:text-2xl ">
@@ -93,13 +102,7 @@ function StaffNavbar() {
           <p>Staff Portal</p>
         </div>
 
-        <p className="lg:text-4xl text-sm">
-          {{
-            "/staff/dashboard": "Dashboard",
-            "/staff/victim-details": "Victims",
-            "/staff/profile": "Profile",
-          }[location.pathname] || "Staff"}
-        </p>
+        <p className="lg:text-4xl text-sm">{getPageTitle(location.pathname)}</p>
 
         <div className="flex gap-4 items-center">
           <button
@@ -191,7 +194,7 @@ function StaffNavbar() {
               Victims
             </Link>
             <Link
-              to="/staff/profile"
+              to={`/staff-profile/${id}`}
               onClick={() => setMenuOpen(false)}
               className={`${linkBase} ${
                 isActive("/staff/profile") ? linkActive : linkIdle

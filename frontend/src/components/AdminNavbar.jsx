@@ -85,6 +85,18 @@ function AdminNavbar() {
         });
   };
 
+  const getPageTitle = (path) => {
+    if (path.startsWith("/victim-profile/")) return "Victim Profile";
+    if (path.startsWith("/staff-profile/")) return "Staff Profile";
+    const map = {
+      "/admin/dashboard": "Dashboard",
+      "/admin/staff-details": "Staff",
+      "/admin/victims": "Victims",
+      "/admin/profile": "Profile",
+    };
+    return map[path] || "Admin";
+  };
+
   return (
     <>
       <div className="w-full top-0 h-16 p-4 flex justify-between items-center bg-teal-800 text-white font-medium font-['QuickSand'] lg:text-2xl ">
@@ -93,14 +105,7 @@ function AdminNavbar() {
           <p>Admin Portal</p>
         </div>
 
-        <p className="lg:text-4xl text-sm">
-          {{
-            "/admin/dashboard": "Dashboard",
-            "/admin/staff-details": "Staff",
-            "/admin/victims": "Victims",
-            "/admin/profile": "Profile",
-          }[location.pathname] || "Admin"}
-        </p>
+        <p className="lg:text-4xl text-sm">{getPageTitle(location.pathname)}</p>
 
         <div className="flex gap-4 items-center">
           <button

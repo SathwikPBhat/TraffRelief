@@ -56,7 +56,7 @@ function StaffDashboard() {
             <p className="font-medium text-3xl font-['QuickSand']">Assigned Victims</p>
             <FaExternalLinkAlt onClick={()=>navigate("/staff/victim-details")} className='hover:cursor-pointer hover:scale-110'/>
         </div>
-        <Table tableHeaders={["Name","ID","Status","Action"]} tableData = {victimData} />
+        <Table tableHeaders={["Name","ID","Status","Action"]} tableData = {victimData} about = "victim"/>
     </div>
     <div className='flex flex-col justify-between gap-2'>
         <div className='flex items-center justify-between'>

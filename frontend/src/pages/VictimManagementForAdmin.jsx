@@ -261,7 +261,7 @@ function VictimManagementForAdmin() {
             {filteredData.length > 0 ? (
               <Table
                 tableHeaders={["Name", "ID", "Status", "Action"]}
-                tableData={visibleRows}
+                tableData={visibleRows} about="victim"
               />
             ) : (
               <p className="text-md text-red-600 ">No data found</p>

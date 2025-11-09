@@ -3,6 +3,7 @@ import StaffNavbar from "../components/StaffNavbar";
 import VictimCard from "../components/VictimCard";
 import Footer from "../components/Footer";
 import { toast } from "react-toastify";
+import { getVictims } from "../utils/CommonFetches";
 
 function VictimManagementForStaff() {
   const [victimData, setVictimData] = useState([]);
@@ -10,36 +11,9 @@ function VictimManagementForStaff() {
   const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
 
-  const getVictims = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/staff/get-victims/${id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        setVictimData(
-          data.victims.map((v) => ({
-            fullName: v.fullName,
-            victimId: v.victimId,
-            status: v.status,
-            gender: v.gender,
-            age: v.age,
-          }))
-        );
-      } else {
-        toast.error(data.message, { toastId: "fetch-victims-error" });
-      }
-    } catch (err) {
-      toast.error(err.message, { toastId: "fetch-victims-error" });
-    }
-  };
 
   useEffect(()=>{
-    getVictims();
+    getVictims(id, token, setVictimData);
   },[token,id]);
 
   return (

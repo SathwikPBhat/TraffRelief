@@ -12,13 +12,15 @@ import AdminProfile from "./pages/AdminProfile";
 import PageNotFound from "./pages/PageNotFound";
 import VictimProfile from "./pages/VictimProfile";
 import Audit from "./pages/Audit";
+import StaffProfile from "./pages/StaffProfile";
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
-        <Route path = "/audit" element= {<Audit/>}/>
+        <Route path="/audit" element={<Audit />} />
+
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route
@@ -74,6 +76,14 @@ function App() {
           element={
             <PrivateRoute>
               <VictimProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/staff-profile/:staffId"
+          element={
+            <PrivateRoute>
+              <StaffProfile />
             </PrivateRoute>
           }
         />

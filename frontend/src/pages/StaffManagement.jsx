@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import SelectedVictimCard from "../components/SelectedVictimCard";
 import Footer from "../components/Footer";
 import AdminNavbar from "../components/AdminNavbar";
 import Pagination from "../components/Pagination";
@@ -7,6 +6,7 @@ import AddStaffModal from "../components/AddStaffModal";
 import { toast } from "react-toastify";
 import { fetchDistinctRoles, fetchCentreDetails } from "../utils/CommonFetches";
 import { FaCheck } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 function StaffManagement() {
   const [victimSearch, setVictimSearch] = useState("");
@@ -22,6 +22,7 @@ function StaffManagement() {
   const statuses = ["active", "inactive"];
   const [roles, setRoles] = useState([]);
   const [centres, setCentres] = useState([]);
+  const navigate = useNavigate();
 
   const fetchUnassignedVictims = async () => {
     try {
@@ -337,7 +338,7 @@ function StaffManagement() {
                           <td className="py-3 px-4 text-sm text-gray-700 hidden sm:table-cell">
                             {val.status}
                           </td>
-                          <td className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">
+                          <td onClick={()=> navigate(`/staff-profile/${val?.staffId}`)} className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline">
                             View
                           </td>
                         </tr>

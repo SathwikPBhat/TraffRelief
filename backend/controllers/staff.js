@@ -36,4 +36,21 @@ const getVictimById = async(req, res) =>{
     }
 }
 
-module.exports = {getVictims, getVictimById};
+const getStaffById = async(req, res) =>{
+    try{
+        const {staffId} = req.params;
+        if(!staffId){
+            return res.status(401).json({message: "staffId is required"});
+        }
+        const staff = await Staff.findOne({staffId}).populate('centre');
+        if(!staff){
+            return res.status(404).json({message: "No staff found"});
+        }
+        return res.status(200).json({message: "Staff data retrieval successful", staff: staff});
+    }
+    catch(err){
+        return res.status(500).json({message: err.message});
+    }
+}
+
+module.exports = {getVictims, getVictimById, getStaffById};
