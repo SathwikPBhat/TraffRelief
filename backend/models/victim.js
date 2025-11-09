@@ -22,21 +22,59 @@ const caseDetailsForAdminSchema = new mongoose.Schema({
     },
 });
 
-const caseDetailsForStaffSchema = new mongoose.Schema({
-    medicalHistory:{
-        type: String,
+
+const initialDetailsSchema = new mongoose.Schema({
+    injuriesSustained: {
+        type: [String],
+        default: []
     },
-    psychologicalState:{        
+    otherInjuries: {
         type: String,
+        default: ""
     },
-    specialNeeds:{      
+    physicalDisabilities: {
+        type: [String],
+        default: []
+    },
+    otherDisabilities: {
         type: String,
+        default: ""
     },
-    rehabilitationPlan:{
-        type: String,   
-    },
-    followUpActions:{
+    pregnancyStatus: {
         type: String,
+        default: ""
+    },
+    stiStatus: {
+        type: String,
+        default: ""
+    },
+    substanceAbuse: {
+        type: [String],
+        default: []
+    },
+    otherSubstanceAbuse: {
+        type: String,
+        default: ""
+    },
+    rescueAttempts: {
+        type: String,
+        default: ""
+    },
+    rescueDetails: {
+        type: String,
+        default: ""
+    },
+    legalStatus: {
+        type: String,
+        default: ""
+    },
+    photo: {
+        type: String,
+        default: ""
+    },
+    addedAt: {
+        type: Date,
+        default: Date.now
     }
 });
 
@@ -90,8 +128,8 @@ const victimSchema = new mongoose.Schema({
     caseDetailsForAdmin:{
         type: caseDetailsForAdminSchema,
     },
-    caseDetailsForVictim:{
-        type: caseDetailsForStaffSchema,
+    initialDetails: {
+        type: initialDetailsSchema,
     }
 },{timestamps: true});
 
