@@ -2,10 +2,18 @@ const Audit = require('../models/audit');
 
 async function addAudit(req,res){
     try{
+        const {staffId,victimId} = req.params;
+        if(!staffId&&!victimId){
+            return res.status(400).json({ error: "staffId and victimId parameters are required" });
+        }
+        req.body.submittedBy = staffId;
+        req.body.victimId = victimId;
+
         const getAudit=req.body;
         if(!getAudit.result || typeof getAudit.result !== 'object'){
             return res.status(400).json({ error: "Invalid or missing result field" });
         }
+
         const newAudit = new Audit(req.body);
         await newAudit.save();
         res.status(201).json(newAudit);
@@ -44,6 +52,22 @@ async function getAuditDetails(req,res){
         res.status(500).json({ error: "Internal server error" });
     }
 }
+
+async function getAuditByStaff(req,res){
+    try {
+        const { staffId } = req.params;
+        if(!staffId){
+            return res.status(400).json({ error: "staffId parameter is required" });
+        }
+        const audits = await Audit.find({ submittedBy: staffId });
+        res.status(200).json(audits);
+    } catch (error) {
+        console.error("Error retrieving audits by staff:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+
 async function getAllAudits(req,res){
     try {
         const audits = await Audit.find();
@@ -58,5 +82,6 @@ module.exports = {
     addAudit,
     getAuditsByVictimId,
     getAllAudits,
-    getAuditDetails
+    getAuditDetails,
+    getAuditByStaff
 };
