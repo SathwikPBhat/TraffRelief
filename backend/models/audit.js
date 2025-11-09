@@ -55,6 +55,11 @@ const ResultSchema = new Schema({
 }});
 
 const AuditSchema = new Schema({
+  auditId:{
+    type: String,
+    required: true,
+    unique: true
+  },
   victimId:{
     type: Schema.Types.ObjectId,
     ref: 'Victim',
@@ -97,8 +102,10 @@ const AuditSchema = new Schema({
   additionalNoteProgress: String,
 
   // new result field
-  result: { type: ResultSchema, required: true },
-  timestamps:true
+  isFirst:{ type: Boolean, default: false },
+  result: { type: ResultSchema, default:null},
+  generatedResults: { type: Boolean, default: false },
+  timestamps:{createdAt:"timestamp",updatedAt:false}
 });
 
 module.exports = mongoose.model('Audit', AuditSchema);

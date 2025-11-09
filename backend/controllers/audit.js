@@ -3,15 +3,31 @@ const Audit = require('../models/audit');
 async function addAudit(req,res){
     try{
         const {staffId,victimId} = req.params;
-        if(!staffId&&!victimId){
+        if(!staffId||!victimId){
             return res.status(400).json({ error: "staffId and victimId parameters are required" });
         }
+        let newAuditId = "A-101";
+    const lastAudit = await Audit.findOne().sort({ createdAt: -1 });
+
+    if (lastAudit && lastAudit.auditId) {
+      const lastNum = parseInt(lastAudit.auditId.split("-")[1]);
+      newAuditId = `A-${lastNum + 1}`;
+    }
         req.body.submittedBy = staffId;
         req.body.victimId = victimId;
+        req.body.auditId = newAuditId;
 
         const getAudit=req.body;
+
         if(!getAudit.result || typeof getAudit.result !== 'object'){
             return res.status(400).json({ error: "Invalid or missing result field" });
+        }
+        
+        const allAudits=await Audit.find({ victimId: victimId });
+        if(allAudits.length===0){
+            req.body.isFirst=true;
+        }else{
+            req.body.isFirst=false;
         }
 
         const newAudit = new Audit(req.body);
@@ -46,6 +62,7 @@ async function getAuditDetails(req,res){
         if(!audit){
             return res.status(404).json({ error: "Audit not found" });
         }
+        
         res.status(200).json(audit);
     } catch (error) {
         console.error("Error retrieving audit details:", error);
