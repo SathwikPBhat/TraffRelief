@@ -5,6 +5,7 @@ const ActivityLog = require("../models/activityLog.js");
 const centre = require("../models/centre.js");
 const activityLog = require("../models/activityLog.js");
 const Victim = require("../models/victim.js");
+const Audit = require("../models/audit.js");
 
 const viewStaffs = async (req, res) => {
   try {
@@ -339,6 +340,27 @@ const assignVictims = async (req, res) => {
   }
 };
 
+async function getAllAudits(req, res) {
+  try {
+    
+    const audits = await Audit.find()
+      .populate({ path: 'submittedBy', select: 'fullName staffId' })
+      .populate({ path: 'victimId', select: 'fullName victimId' })
+      .sort({ _id: -1 });
+
+    const mapped = audits.map(a => ({
+      auditId: a.auditId,
+      date: a.createdAt || a.timestamp || null,
+      staffName: a.submittedBy?.fullName || 'Unknown',
+      victimName: a.victimId?.fullName || 'Unknown'
+    }));
+
+    return res.status(200).json({ audits: mapped });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
 module.exports = {
   handleAddStaff,
   viewStaffs,
@@ -348,4 +370,5 @@ module.exports = {
   addVictim,
   getUnassignedVictims,
   assignVictims,
+  getAllAudits
 };

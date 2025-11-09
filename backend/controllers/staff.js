@@ -3,6 +3,7 @@ const Victim = require('../models/victim.js');
 const activityLog = require("../models/activityLog.js");
 const {v4:uuidv4} = require('uuid');
 const Release=require('../models/release.js');
+const Audit = require('../models/audit');
 
 const getVictims = async(req, res) =>{
     try{
@@ -132,4 +133,49 @@ const addInitialDetails = async (req, res) => {
 };
 
 
-module.exports = {getVictims, getVictimById, getStaffById, getNotifications, addInitialDetails};
+async function getStaffAudits(req, res) {
+  try {
+    const { staffId } = req.params;
+    if (!staffId) return res.status(400).json({ message: "staffId required" });
+
+    const staff = await Staff.findOne({ staffId });
+    if (!staff) return res.status(404).json({ message: "Staff not found" });
+
+    // Fetch audits submitted by this staff
+    const audits = await Audit.find({ submittedBy: staff._id })
+      .populate({ path: 'victimId', select: 'fullName victimId' })
+      .sort({ _id: -1 });
+
+    const mapped = audits.map(a => ({
+      auditId: a.auditId,
+      date: a.timestamp || a.createdAt,
+      staffName: staff.fullName,
+      victimName: a.victimId?.fullName || 'Unknown'
+    }));
+
+    return res.status(200).json({ audits: mapped });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+async function getReleasedVictims(req,res){
+    try{
+        const {staffId}= req.params;
+        if(!staffId){
+            return res.status(400).json({ error: "staffId parameter is required" });
+        }
+        const staff = await Staff.find
+        ({ staffId });
+        if(!staff){
+            return res.status(404).json({ error: "Staff not found" });
+        }
+        const victims = await Victim.find({ staffId: staff._id, status: 'released' });
+        return res.status(200).json(victims);
+    } catch (error) {
+        console.error("Error retrieving released victims:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }   
+}
+
+module.exports = {getVictims, getVictimById, getStaffById, getNotifications, addInitialDetails,getReleasedVictims,getStaffAudits};

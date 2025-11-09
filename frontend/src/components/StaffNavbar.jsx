@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { IoMdNotifications } from "react-icons/io";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
-import { IoMdNotifications } from "react-icons/io";
 
 function StaffNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,6 +90,7 @@ function StaffNavbar() {
     const map = {
       "/staff/dashboard": "Dashboard",
       "/staff/victim-details": "Victims",
+      "/staff/audit-list": "Audit List",
     };
     return map[path] || "Staff";
   };
@@ -192,6 +193,15 @@ function StaffNavbar() {
               }`}
             >
               Victims
+            </Link>
+            <Link
+              to="/staff/audit-list"
+              onClick={() => setMenuOpen(false)}
+              className={`${linkBase} ${
+                isActive("/staff/audit-list") ? linkActive : linkIdle
+              }`}
+            >
+              Audits
             </Link>
             <Link
               to={`/staff-profile/${id}`}

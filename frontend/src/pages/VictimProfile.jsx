@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import StaffNavbar from "../components/StaffNavbar";
-import AdminNavbar from "../components/AdminNavbar";
-import { useLocation, useParams } from "react-router-dom";
-import Footer from "../components/Footer";
-import golimaams from "../assets/golimaams.png";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import golimaams from "../assets/golimaams.png";
+import AdminNavbar from "../components/AdminNavbar";
 import AuditTable from "../components/AuditTable";
+import Footer from "../components/Footer";
 import InitialDetailsModal from "../components/InitialDetailsModal";
+import StaffNavbar from "../components/StaffNavbar";
 
 function VictimProfile() {
   const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
-
+  const navigate = useNavigate();
   const { victimId } = useParams();
   const [victimData, setVictimData] = useState(null);
   const [auditData, setAuditData] = useState([]);
@@ -89,8 +89,8 @@ function VictimProfile() {
       </div>
     );
   }
-  const hasInitialDetails =
-    victimData.initialDetails && victimData.initialDetails.addedAt;
+     const isActive = victimData.status === "active";
+  const hasInitialDetails = Boolean(victimData?.initialDetails?.addedAt);
   return (
     <main className="w-full min-h-screen bg-stone-100 font-['QuickSand'] flex flex-col">
       {role === "admin" ? <AdminNavbar /> : <StaffNavbar />}
@@ -170,47 +170,43 @@ function VictimProfile() {
             </div>
           </div>
         </div>
+  {isActive && role === "admin" && (
+    <div className="w-full flex justify-end mt-5">
+      {hasInitialDetails ? (
+        <div className="px-4 py-2 rounded-xl bg-green-50 border border-green-300 text-green-700 font-medium">
+          Initial Details Added
+        </div>
+      ) : (
+        <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-700 font-medium">
+          Initial Details Not Added
+        </div>
+      )}
+    </div>
+  )}
 
-        {!hasInitialDetails && role !== "admin" && (
-          <div className="w-full flex flex-row justify-end items-center mt-5">
-            <button
-              onClick={() => setShowInitModal(true)}
-              className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
-            >
-              Add Initial Data
-            </button>
-          </div>
-        )}
-        {!hasInitialDetails && role === "admin" && (
-          <div className="w-full flex flex-row justify-end items-center mt-5">
-            <div className="px-4 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-700 font-medium flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Initial Details Not Added
-            </div>
-          </div>
-        )}
-        
-        {/* say added already */}
-        {hasInitialDetails && (
-          <div className="w-full flex flex-row justify-end items-center mt-5">
-            <div className="px-4 py-2 rounded-xl bg-green-50 border border-green-300 text-green-700 font-medium flex items-center gap-2">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Initial Details Completed
-            </div>
-          </div>
-        )}
+  { isActive &&  role !== "admin" && !hasInitialDetails && (
+    <div className="w-full flex justify-end mt-5">
+      <button
+        onClick={() => setShowInitModal(true)}
+        className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
+      >
+        Add Initial Data
+      </button>
+    </div>
+  )}
+
+  { isActive && role !== "admin" && hasInitialDetails && (
+    <div className="w-full flex justify-end mt-5">
+      <button
+        onClick={() => navigate(`/audit/${victimId}`)}
+        className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
+      >
+        Add Audit
+      </button>
+    </div>
+  )}
+
+
         <div className="mt-14 relative">
           <div className="absolute -top-8.5 left-4 rounded-t-xl pt-1 px-6 text-center border border-teal-600 bg-stone-100 text-gray-500 text-lg">
             Audits

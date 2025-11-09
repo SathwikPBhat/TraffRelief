@@ -1,27 +1,29 @@
-import { useState } from "react";
-import Login from "./pages/Login";
-import StaffManagement from "./pages/StaffManagement";
-import StaffDashboard from "./pages/StaffDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./components/PrivateRoute";
-import { Routes, Route, Navigate } from "react-router-dom";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProfile from "./pages/AdminProfile";
+import AudioInterviewPage from "./pages/AudioInterviewPage";
+import Audit from "./pages/Audit";
+import AuditList from "./pages/AuditList";
+import AuditSummary from "./pages/AuditSummary";
+import Login from "./pages/Login";
+import PageNotFound from "./pages/PageNotFound";
+import PendingAuditsPage from "./pages/PendingAuditsPage";
+import ReleasedVictimsPage from "./pages/ReleasedVictimsPage";
+import StaffDashboard from "./pages/StaffDashboard";
+import StaffManagement from "./pages/StaffManagement";
+import StaffProfile from "./pages/StaffProfile";
 import VictimManagementForAdmin from "./pages/VictimManagementForAdmin";
 import VictimManagementForStaff from "./pages/VictimManagementForStaff";
-import AdminProfile from "./pages/AdminProfile";
-import PageNotFound from "./pages/PageNotFound";
 import VictimProfile from "./pages/VictimProfile";
-import Audit from "./pages/Audit";
-import StaffProfile from "./pages/StaffProfile";
-import InitialDetailsModal from "./components/InitialDetailsModal";
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
-        <Route path="/audit" element={<Audit />} />
-        <Route path="/initial" element={<InitialDetailsModal />} />
+    
 
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
@@ -86,6 +88,64 @@ function App() {
           element={
             <PrivateRoute>
               <StaffProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/audit/:victimId"
+          element={
+            <PrivateRoute>
+              <Audit />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/audit-list"
+          element={
+            <PrivateRoute>
+              <AuditList/>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/staff/audit-list"
+          element={
+            <PrivateRoute>
+              <AuditList/>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/audit-summary/:auditId"
+          element={
+            <PrivateRoute>
+              <AuditSummary/>
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/victim/:hashId"
+          element={
+            
+              <AudioInterviewPage />
+            
+          }
+        />
+        <Route
+          path="/staff/:staffId/pending-audits"
+          element={
+            <PrivateRoute>
+              <PendingAuditsPage />
+            </PrivateRoute>
+          }
+        />
+
+       <Route
+          path="/staff/:staffId/released-victims"
+          element={
+            <PrivateRoute>
+              <ReleasedVictimsPage />
             </PrivateRoute>
           }
         />

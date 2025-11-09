@@ -4,10 +4,10 @@ const fs = require("fs");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const BERT_URL = process.env.BERT_URL; // Your FastAPI endpoint
+const BERT_URL = process.env.BERT_PREDICTION_URL; // Your FastAPI endpoint
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
+const axios=require('axios');
 const {v4:uuidv4} = require('uuid');
 const Release=require('../models/release.js');
 const Staff=require('../models/staff.js');
@@ -118,6 +118,8 @@ async function submitRelease(req, res)  {
     const summary = summaryResult.response.text().trim();
     console.log("Summary:", summary);
 
+//const summary="The individual expresses a persistent and overwhelming sense of impending doom, indicating significant emotional distress.";
+//transcript=" I can't shake this constant feeling that something terrible is about to happen.";
     const bertResp = await axios.post(BERT_URL, { text: transcript });
     const result = bertResp.data
     console.log("BERT Analysis:", result);
@@ -134,20 +136,39 @@ async function submitRelease(req, res)  {
         releaseRecord.submittedTime=Date.now();
         releaseRecord.transcription=transcript;
         releaseRecord.summary=summary;
-        for(const key in result){
-            releaseRecord.results[key]=result[key];
-        }
-
-        let highest=result[0];
-        let highestkey="";
-        for(const key in result){
-            if(result[key]>highest){
-                highest=result[key];
+        
+        releaseRecord.results.anxiety=result.scores.LABEL_0.toString();
+        releaseRecord.results.bipolar=result.scores.LABEL_1.toString();
+        releaseRecord.results.depression=result.scores.LABEL_2.toString();
+        releaseRecord.results.normal=result.scores.LABEL_3.toString();
+        releaseRecord.results.personality_disorder=result.scores.LABEL_4.toString();
+        releaseRecord.results.stress=result.scores.LABEL_5.toString();
+        releaseRecord.results.suicidal=result.scores.LABEL_6.toString();
+        let highest=-1;
+        let highestkey='';
+        for(const key in result.scores){
+            if(result.scores[key]>highest){
+                highest=result.scores[key];
                 highestkey=key;
             }
         }
+
+        if(highestkey==='LABEL_0'){
+            highestkey='anxiety';
+        }else if(highestkey==='LABEL_1'){
+            highestkey='bipolar';
+        }else if(highestkey==='LABEL_2'){
+            highestkey='depression';
+        }else if(highestkey==='LABEL_3'){
+            highestkey='normal';
+        }else if(highestkey==='LABEL_4'){
+            highestkey='personality_disorder';
+        }else if(highestkey==='LABEL_5'){
+            highestkey='stress';
+        }else if(highestkey==='LABEL_6'){
+            highestkey='suicidal';
+        }   
         releaseRecord.verdict=highestkey;
-        
 
         await releaseRecord.save();
 

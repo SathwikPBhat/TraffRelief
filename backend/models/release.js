@@ -30,6 +30,7 @@ const releaseSchema=new mongoose.Schema({
         
     },
    results:{
+    anxiety:String,
     bipolar:String,
 depression:String,
 	normal:String,

@@ -9,9 +9,7 @@ const staffRoute = require('./routes/staff.js');
 const connectDB = require('./db/connection.js');
 
 app.use(cors());
-// custom JSON parser that tolerates non-strict JSON (uses JSON5 fallback)
-const customJsonParser = require('./middlewares/json-parser');
-app.use(customJsonParser);
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.listen(process.env.PORT || 5000, () => {

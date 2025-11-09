@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { IoMdNotifications } from "react-icons/io";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
-import { IoMdNotifications } from "react-icons/io";
 
 function AdminNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -88,11 +88,13 @@ function AdminNavbar() {
   const getPageTitle = (path) => {
     if (path.startsWith("/victim-profile/")) return "Victim Profile";
     if (path.startsWith("/staff-profile/")) return "Staff Profile";
+    if (path.startsWith("/audit-summary/")) return "Audit Summary"; 
     const map = {
       "/admin/dashboard": "Dashboard",
       "/admin/staff-details": "Staff",
       "/admin/victims": "Victims",
       "/admin/profile": "Profile",
+      "/admin/audit-list": "Audit List",                                   
     };
     return map[path] || "Admin";
   };
@@ -204,6 +206,15 @@ function AdminNavbar() {
               }`}
             >
               Victims
+            </Link>
+            <Link
+              to="/admin/audit-list"
+              onClick={() => setMenuOpen(false)}
+              className={`${linkBase} ${
+                isActive("/admin/audit-list") ? linkActive : linkIdle
+              }`}
+            >
+              Audits
             </Link>
             <Link
               to="/admin/profile"

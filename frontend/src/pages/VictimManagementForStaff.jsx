@@ -1,8 +1,7 @@
-import React, { useState, useEffect, use } from "react";
+import { useEffect, useState } from "react";
+import Footer from "../components/Footer";
 import StaffNavbar from "../components/StaffNavbar";
 import VictimCard from "../components/VictimCard";
-import Footer from "../components/Footer";
-import { toast } from "react-toastify";
 import { getVictims } from "../utils/CommonFetches";
 
 function VictimManagementForStaff() {
@@ -24,7 +23,7 @@ function VictimManagementForStaff() {
         <div className="flex flex-col gap-4 mb-4">
         {
           victimData.length > 0 ? (
-            victimData.map((v)=> (<VictimCard victimData={v}/>))
+            victimData.map((v, idx )=> (<VictimCard key={idx} victimData={v}/>))
           ):(
             <p className="text-red-600 ">No data found</p>
           )
