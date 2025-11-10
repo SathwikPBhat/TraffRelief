@@ -1,0 +1,11 @@
+model/
+*.pt
+*.pkl
+*.onnx
+*.safetensors
+
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
