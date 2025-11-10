@@ -289,13 +289,13 @@ const createRelease = async (victimId) => {
                           onClick={() => createRelease(vid)}
                           className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded"
                         >
-                          {actionLoading === vid ? "Processing..." : "Create Release"}
+                          {actionLoading === vid ? "Processing..." : "Create Assessment"}
                         </button>
                         <button
                           onClick={() => viewReleases(vid)}
                           className="bg-teal-100 hover:bg-teal-200 text-teal-800 px-3 py-1 rounded"
                         >
-                          View Releases
+                          View Assessments
                         </button>
                       </td>
                     </tr>

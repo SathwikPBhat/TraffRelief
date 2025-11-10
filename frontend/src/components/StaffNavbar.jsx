@@ -203,6 +203,16 @@ function StaffNavbar() {
             >
               Audits
             </Link>
+
+            <Link
+              to={`/staff/${id}/released-victims`}
+              onClick={() => setMenuOpen(false)}
+              className={`${linkBase} ${
+                isActive(`/staff/${id}/released-victims`) ? linkActive : linkIdle
+              }`}
+            >
+              Released Victims
+            </Link>
             <Link
               to={`/staff-profile/${id}`}
               onClick={() => setMenuOpen(false)}
