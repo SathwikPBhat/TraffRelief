@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const {handleAddStaff, viewStaffs, getActivityLogs, markAllNotificationsRead, getVictimDetails, addVictim, getUnassignedVictims, assignVictims,getAllAudits} = require('../controllers/admin.js');
+const {handleAddStaff, viewStaffs, getActivityLogs, markAllNotificationsRead, getVictimDetails, addVictim, getUnassignedVictims, assignVictims,getAllAudits, getAdminDetails} = require('../controllers/admin.js');
 const { getAuditDetails } = require('../controllers/audit.js');
 const upload = require('../middlewares/upload');
 
@@ -13,5 +13,6 @@ router.patch('/mark-all-notifications-read/:adminId', markAllNotificationsRead)
 router.patch('/assign-victims/:adminId', assignVictims);
 router.get('/audit-summary/:auditId',getAuditDetails);
 router.get('/get-all-audits', getAllAudits);
+router.get('/:adminId', getAdminDetails);
 
 module.exports = router;

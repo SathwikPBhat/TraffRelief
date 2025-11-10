@@ -29,10 +29,10 @@ function AuditTable({ tableHeaders, tableData }) {
                 <td className="py-3 px-4 text-sm text-slate-900">{val.date}</td>
                 <td className="py-3 px-4 text-sm text-slate-900">{val.id}</td>
                 <td className="py-3 px-4 text-sm text-slate-900">
-                  {val.staffName}
+                  {val.victimId}
                 </td>
                 <td
-                  onClick={() => navigate(`/audit-details/${val.id}`)}
+                  onClick={() => navigate(`/audit/${val.victimId}`)}
                   className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline"
                 >
                   View

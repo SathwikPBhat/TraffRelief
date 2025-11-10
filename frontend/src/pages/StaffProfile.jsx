@@ -4,50 +4,102 @@ import StaffNavbar from "../components/StaffNavbar";
 import golimaams from "../assets/golimaams.png";
 import { getVictims } from "../utils/CommonFetches";
 import VictimCard from "../components/VictimCard";
-import Table from "../components/Table";
 import Footer from "../components/Footer";
 import { toast } from "react-toastify";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+
+
+function StaffAuditTable({ rows, onView }) {
+  const navigate = useNavigate();
+  return (
+    <div className="w-full overflow-hidden rounded-2xl shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] hover:scale-101 transition">
+      <table className="w-full border-y-3 border-x-2 border-teal-700">
+        <thead className="h-14 bg-gray-50 text-black font-['QuickSand'] font-semibold">
+          <tr>
+            <th className="px-4 py-3 text-left">Date</th>
+            <th className="px-4 py-3 text-left">Audit ID</th>
+            <th className="px-4 py-3 text-left">Victim</th>
+            <th className="px-4 py-3 text-left">Action</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white font-['QuickSand'] font-medium">
+          {rows.map((r, i) => (
+            <tr key={i} className="border-t border-slate-600 hover:bg-gray-50">
+              <td className="py-3 px-4 text-sm text-slate-900">{r.date}</td>
+              <td className="py-3 px-4 text-sm text-slate-900">{r.id}</td>
+              <td className="py-3 px-4 text-sm text-slate-900">{r.victim}</td>
+              <td
+                onClick={() => (onView ? onView(r.id) : navigate(`/audit-summary/${r.id}`))}
+                className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline"
+              >
+                View
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function StaffProfile() {
   const token = localStorage.getItem("token");
-  const {staffId} = useParams();
+  const { staffId } = useParams();
   const role = localStorage.getItem("role");
-  const isAdmin = role === "admin" ? true : false;
-  const isStaff = role === "staff" ? true : false;
+  const isAdmin = role === "admin";
+  const isStaff = role === "staff";
   const [victimData, setVictimData] = useState([]);
   const [staffData, setStaffData] = useState({});
+  const [audits, setAudits] = useState([]);         
+  const [loadingAudits, setLoadingAudits] = useState(true); 
+  const navigate = useNavigate();
 
-  const auditData = [
-    { name: "Alice", id: "C-101", status: "Active" },
-    { name: "Bob", id: "C-102", status: "Inactive" },
-    { name: "Charlie", id: "C-103", status: "Active" },
-    { name: "David", id: "C-104", status: "Active" },
-  ];
-
-  const getStaffData  = async () => {
+  const getStaffData = async () => {
     try {
       const res = await fetch(`http://localhost:5000/staff/get-staff/${staffId}`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (res.ok) {
-        setStaffData(data.staff);
-        console.log(data.staff);
-      } else {
-        toast.error(data.message, { toastId: "fetchStaffError" });
-      }
+      if (res.ok) setStaffData(data.staff);
+      else toast.error(data.message, { toastId: "fetchStaffError" });
     } catch (err) {
       toast.error(err.message, { toastId: "fetchStaffError" });
     }
   };
 
+  // Fetch staff-specific audits
+  const fetchStaffAudits = async () => {
+    if (!staffId) return;
+    try {
+      const res = await fetch(`http://localhost:5000/staff/${staffId}/audits`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        
+        const rows = (data.audits || []).map(a => ({
+          date: a.date ? new Date(a.date).toLocaleDateString() : "N/A",
+          id: a.auditId,                      
+          victim: a.victimName || "Unknown"
+        }));
+        setAudits(rows);
+      } else {
+        toast.error(data.message || "Failed to fetch audits", { toastId: "fetchAuditsError" });
+      }
+    } catch (e) {
+      toast.error(e.message, { toastId: "fetchAuditsError" });
+    } finally {
+      setLoadingAudits(false);
+    }
+  };
+
+  const handleAuditView = (auditId) => navigate(`/audit-summary/${auditId}`);
+
   useEffect(() => {
     getVictims(staffId, token, setVictimData);
     getStaffData();
+    fetchStaffAudits();
   }, [token, staffId]);
 
   return (
@@ -74,26 +126,16 @@ function StaffProfile() {
               />
               <div className="flex flex-col gap-1 min-w-0 flex-1">
                 <p className="break-words">
-                  Name:{" "}
-                  <span className="text-teal-700 font-medium">
-                    {staffData.fullName}
-                  </span>
+                  Name: <span className="text-teal-700 font-medium">{staffData.fullName}</span>
                 </p>
                 <p className="break-words">
-                  Email:{" "}
-                  <span className="text-teal-700 font-medium">
-                    {staffData.email}
-                  </span>
+                  Email: <span className="text-teal-700 font-medium">{staffData.email}</span>
                 </p>
                 <p>
-                  Gender:{" "}
-                  <span className="text-teal-700 font-medium">Male</span>
+                  Gender: <span className="text-teal-700 font-medium">{staffData.gender || "N/A"}</span>
                 </p>
                 <p>
-                  Contact:{" "}
-                  <span className="text-teal-700 font-medium">
-                    {staffData.mobileNo}
-                  </span>
+                  Contact: <span className="text-teal-700 font-medium">{staffData.mobileNo}</span>
                 </p>
               </div>
             </div>
@@ -120,9 +162,8 @@ function StaffProfile() {
           <div className="absolute -top-8.5 -z-0 left-4 sm:left-6 rounded-t-xl pt-1 px-4 sm:px-6 text-center border border-teal-600 bg-stone-100 text-gray-500 text-base sm:text-lg">
             Assigned Victims
           </div>
-
           {victimData.length > 0 ? (
-            victimData.map((v, idx) => <VictimCard key ={idx} victimData={v} />)
+            victimData.map((v, idx) => <VictimCard key={idx} victimData={v} />)
           ) : (
             <p className="text-red-600 ">No data found</p>
           )}
@@ -132,10 +173,16 @@ function StaffProfile() {
           <div className="absolute -top-8.5 left-4 rounded-t-xl pt-1 px-6 text-center border border-teal-600 bg-stone-100 text-gray-500 text-lg">
             Audits
           </div>
-          <Table
-            tableHeaders={["Name", "ID", "Status", "Action"]}
-            tableData={auditData}
-          />
+
+          <div className="bg-white border border-teal-600 rounded-lg p-4 shadow-[0px_2px_20px_0px_rgba(96,125,139,0.50)]">
+            {loadingAudits ? (
+              <div className="text-teal-700 text-sm">Loading audits...</div>
+            ) : audits.length === 0 ? (
+              <div className="text-slate-600 text-sm">No audits found.</div>
+            ) : (
+              <StaffAuditTable rows={audits} onView={handleAuditView} />
+            )}
+          </div>
         </div>
       </div>
       <Footer />

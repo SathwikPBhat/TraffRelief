@@ -361,6 +361,22 @@ async function getAllAudits(req, res) {
   }
 }
 
+async function getAdminDetails(req, res) {
+  try {
+    const { adminId } = req.params;
+    const admin = await Admin.findOne({ adminId });
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    return res.status(200).json(admin);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
+
 module.exports = {
   handleAddStaff,
   viewStaffs,
@@ -370,5 +386,6 @@ module.exports = {
   addVictim,
   getUnassignedVictims,
   assignVictims,
-  getAllAudits
+  getAllAudits,
+  getAdminDetails,
 };

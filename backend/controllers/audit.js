@@ -210,19 +210,33 @@ async function getPendingAudits(req,res){
     }
 }
 
+
 async function getAuditsByVictimId(req, res) {
   try {
     const { victimId } = req.params;
-    if (!victimId) {
-      return res.status(400).json({ error: "victimId parameter is required" });
-    }
-    const audits = await Audit.find({ "result.victim_id": victimId });
-    res.status(200).json(audits);
+    if (!victimId) return res.status(400).json({ error: "victimId parameter is required" });
+
+    const victim = await Victim.findOne({ victimId }).select('_id');
+    if (!victim) return res.status(404).json({ error: "Victim not found" });
+
+    const audits = await Audit.find({ victimId: victim._id })
+      .populate({ path: 'submittedBy', model: 'Staff', select: 'fullName staffId' })
+      .sort({ _id: -1 })
+      .lean();
+
+    const list = audits.map(a => ({
+      auditId: a.auditId,
+      date: a.timestamp || a.createdAt || null,
+      staffName: (a.submittedBy && (a.submittedBy.fullName || a.submittedBy.staffId)) || 'Unknown'
+    }));
+
+    return res.status(200).json({ audits: list });
   } catch (error) {
-    console.error("Error retrieving audits:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Error retrieving victim audits:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
+
 async function getAuditDetails(req, res) {
   try {
     const { auditId } = req.params;
@@ -279,5 +293,6 @@ module.exports = {
     getAllAudits,
     getAuditDetails,
     getAuditByStaff,
-    getPendingAudits
+    getPendingAudits,
+    getAuditsByVictimId
 };

@@ -199,11 +199,6 @@ function AdminDashboard() {
                 
             </div>
 
-             <div className='flex flex-col gap-4 mt-4 '>
-                <p className='font-medium text-3xl'>Some Data</p>
-                <div></div>
-            </div>
-
             <div className='flex flex-col gap-4 mt-4'>
                 <p className='font-medium text-3xl'>Recent Activity</p>
                 <ActivityTable tableHeaders={["Date", "Activity", "Details"]} tableData={activityData}/>

@@ -7,6 +7,7 @@ const {evaluateAudit} = require("../controllers/gemini.js");
 const {createRelease,submitRelease,viewReleaseResults,viewReleaseByVictim}=require("../controllers/release.js")
 const {getPendingAudits}=require("../controllers/audit.js");
 const {getReleasedVictims}=require("../controllers/staff.js");
+const { getAuditsByVictimId } = require('../controllers/audit.js');
 
 router.get('/get-victims/:staffId', getVictims);
 router.get('/get-victim/:victimId', getVictimById);
@@ -23,5 +24,6 @@ router.get("/release/:hashId/results", viewReleaseResults);
 router.post('/:hashId', upload.single("audio"), submitRelease);
 router.get('/:staffId/pending-audits', getPendingAudits);
 router.get('/:staffId/released-victims',getReleasedVictims);
+router.get('/victim/:victimId/audits', getAuditsByVictimId);
 
 module.exports = router;
