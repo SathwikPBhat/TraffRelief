@@ -7,6 +7,7 @@ import AudioInterviewPage from "./pages/AudioInterviewPage";
 import Audit from "./pages/Audit";
 import AuditList from "./pages/AuditList";
 import AuditSummary from "./pages/AuditSummary";
+import InterviewResultsPage from "./pages/InterviewResultsPage";
 import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
 import PendingAuditsPage from "./pages/PendingAuditsPage";
@@ -17,6 +18,7 @@ import StaffProfile from "./pages/StaffProfile";
 import VictimManagementForAdmin from "./pages/VictimManagementForAdmin";
 import VictimManagementForStaff from "./pages/VictimManagementForStaff";
 import VictimProfile from "./pages/VictimProfile";
+import ViewReleasesByVictim from "./pages/ViewReleasesByVictim";
 
 function App() {
   return (
@@ -149,7 +151,15 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route path="*" element={<PageNotFound />} />
+
+        <Route path="/view-releases/:staffId/:victimId" element={
+          <PrivateRoute>
+          <ViewReleasesByVictim />
+          </PrivateRoute>}
+          />
+   <Route path="/interview-results/:hashId" element={<InterviewResultsPage />} />
+        <Route path="*" element={<PageNotFound />
+      } />
       </Routes>
     </>
   );

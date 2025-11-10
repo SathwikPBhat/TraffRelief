@@ -4,7 +4,8 @@ const victim = require('./victim');
 const releaseSchema=new mongoose.Schema({
     scheduledDate:{
         type:Date,
-        required:true
+        required:true,
+        default:Date.now()
     },
     submittedTime:{
         type:Date,
