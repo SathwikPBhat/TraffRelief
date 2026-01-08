@@ -217,6 +217,15 @@ function AdminNavbar() {
               Audits
             </Link>
             <Link
+              to="/admin/analytics"
+              onClick={() => setMenuOpen(false)}
+              className={`${linkBase} ${
+                isActive("/admin/analytics") ? linkActive : linkIdle
+              }`}
+            >
+              Analytics
+            </Link>
+            <Link
               to="/admin/profile"
               onClick={() => setMenuOpen(false)}
               className={`${linkBase} ${

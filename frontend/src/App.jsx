@@ -19,6 +19,7 @@ import VictimManagementForAdmin from "./pages/VictimManagementForAdmin";
 import VictimManagementForStaff from "./pages/VictimManagementForStaff";
 import VictimProfile from "./pages/VictimProfile";
 import ViewReleasesByVictim from "./pages/ViewReleasesByVictim";
+import Analytics from "./pages/Analytics";
 
 function App() {
   return (
@@ -61,6 +62,11 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route path = "/admin/analytics" element ={
+          <PrivateRoute>
+            <Analytics/>
+          </PrivateRoute>
+        }/>
         <Route
           path="/staff/victim-details"
           element={
