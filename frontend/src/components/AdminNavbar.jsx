@@ -8,13 +8,12 @@ function AdminNavbar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const location = useLocation();
-  const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
 
   const getNotifications = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/get-activity-details/${id}`,
+        `http://localhost:5000/admin/get-activity-details`,
         {
           method: "GET",
           headers: {
@@ -38,7 +37,7 @@ function AdminNavbar() {
     setNotifOpen(false);
     try {
       await fetch(
-        `http://localhost:5000/admin/mark-all-notifications-read/${id}`,
+        `http://localhost:5000/admin/mark-all-notifications-read`,
         {
           method: "PATCH",
           headers: {
@@ -116,7 +115,7 @@ function AdminNavbar() {
               setNotifOpen(false);
             }}
             aria-label="Open menu"
-            className="text-white text-2xl leading-none"
+            className="text-white text-2xl leading-none hover:cursor-pointer "
             title="Menu"
           >
             &#9776;

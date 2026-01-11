@@ -1,10 +1,27 @@
 import React from "react";
 import { toast } from "react-toastify";
 
-export const fetchDistinctRoles = async (id, token, setRoles) => {
+export  const getUserData = async(token, setUserData) =>{
+    try{
+      const res = await fetch(`http://localhost:5000/user/me`,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json();
+      setUserData(data);
+
+    }
+    catch(err){
+      console.log(err.message);
+    }
+  }
+
+export const fetchDistinctRoles = async (token, setRoles) => {
   try {
     const res = await fetch(
-      `http://localhost:5000/stats/distinct-roles/${id}`,
+      `http://localhost:5000/stats/distinct-roles`,
       {
         method: "GET",
         headers: {
@@ -23,10 +40,10 @@ export const fetchDistinctRoles = async (id, token, setRoles) => {
   }
 };
 
-export const fetchCentreDetails = async (id, token, setCentres) => {
+export const fetchCentreDetails = async (token, setCentres) => {
   try {
     const res = await fetch(
-      `http://localhost:5000/stats/centre-details/${id}`,
+      `http://localhost:5000/stats/centre-details`,
       {
         method: "GET",
         headers: {
@@ -46,9 +63,9 @@ export const fetchCentreDetails = async (id, token, setCentres) => {
   }
 };
 
-export const getVictims = async (id, token, setVictimData) => {
+export const getVictims = async (staffId, token, setVictimData) => {
   try {
-    const res = await fetch(`http://localhost:5000/staff/get-victims/${id}`, {
+    const res = await fetch(`http://localhost:5000/staff/get-victims/${staffId}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

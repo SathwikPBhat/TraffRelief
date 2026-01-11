@@ -18,7 +18,6 @@ import Footer from "../components/Footer";
 
 function Analytics() {
   const token = localStorage.getItem("token");
-  const adminId = localStorage.getItem("id");
 
   const [traffickingData, setTraffickingData] = useState([]);
   const [genderData, setGenderData] = useState([]);
@@ -60,7 +59,7 @@ function Analytics() {
   const fetchCentres = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/stats/get-centres-for-analytics/${adminId}`,
+        `http://localhost:5000/stats/get-centres-for-analytics`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -80,8 +79,8 @@ function Analytics() {
     try {
       const url =
         selectedCentre === "all"
-          ? `http://localhost:5000/stats/get-trafficking-types/${adminId}`
-          : `http://localhost:5000/stats/get-trafficking-types/${adminId}?centreId=${selectedCentre}`;
+          ? `http://localhost:5000/stats/get-trafficking-types`
+          : `http://localhost:5000/stats/get-trafficking-types?centreId=${selectedCentre}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -101,8 +100,8 @@ function Analytics() {
     try {
       const url =
         selectedCentre === "all"
-          ? `http://localhost:5000/stats/get-victims-by-gender/${adminId}`
-          : `http://localhost:5000/stats/get-victims-by-gender/${adminId}?centreId=${selectedCentre}`;
+          ? `http://localhost:5000/stats/get-victims-by-gender`
+          : `http://localhost:5000/stats/get-victims-by-gender?centreId=${selectedCentre}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -127,8 +126,8 @@ function Analytics() {
     try {
       const url =
         selectedCentre === "all"
-          ? `http://localhost:5000/stats/get-victims-by-age/${adminId}`
-          : `http://localhost:5000/stats/get-victims-by-age/${adminId}?centreId=${selectedCentre}`;
+          ? `http://localhost:5000/stats/get-victims-by-age`
+          : `http://localhost:5000/stats/get-victims-by-age?centreId=${selectedCentre}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -164,8 +163,8 @@ function Analytics() {
     try {
       const url =
         selectedCentre === "all"
-          ? `http://localhost:5000/stats/get-victims-by-status/${adminId}`
-          : `http://localhost:5000/stats/get-victims-by-status/${adminId}?centreId=${selectedCentre}`;
+          ? `http://localhost:5000/stats/get-victims-by-status`
+          : `http://localhost:5000/stats/get-victims-by-status?centreId=${selectedCentre}`;
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -186,7 +185,7 @@ function Analytics() {
       setLoading(false);
     };
     loadInitialData();
-  }, [token, adminId]);
+  }, [token]);
 
   useEffect(() => {
     const fetchAllData = async () => {

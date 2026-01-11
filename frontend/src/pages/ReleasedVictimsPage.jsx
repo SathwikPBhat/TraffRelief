@@ -1,165 +1,39 @@
-// ...existing code...
-/*import { useEffect, useState } from "react";
-import Footer from '../components/Footer';
-import StaffNavbar from '../components/StaffNavbar';
-
-function ReleasedVictimsPage() {
-  const [victims, setVictims] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(null); // victimId being processed
-  const [error, setError] = useState("");
-  const staffId = localStorage.getItem("staffId") || localStorage.getItem("id");
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    if (!staffId) {
-      setError("Staff ID not found in localStorage");
-      setLoading(false);
-      return;
-    }
-    const fetchReleased = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(
-          `http://localhost:5000/staff/${encodeURIComponent(staffId)}/released-victims`,
-          {
-            headers: {
-              Authorization: token ? `Bearer ${token}` : undefined,
-            },
-          }
-        );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to load");
-        // if backend returns object with victims key handle it
-        setVictims(Array.isArray(data) ? data : data.victims || []);
-      } catch (err) {
-        setError(err.message || "Error fetching released victims");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReleased();
-  }, [staffId, token]);
-
-  const createRelease = async (victimId) => {
-    if (!confirm(`Create release for victim ${victimId}?`)) return;
-    setActionLoading(victimId);
-    setError("");
-    try {
-      // Adjust this endpoint if your backend expects a different path
-      const endpoint = `http://localhost:5000/staff/${encodeURIComponent(
-        staffId
-      )}/create-release/${encodeURIComponent(victimId)}`;
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ victimId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create release");
-      // Optionally refresh list or remove released victim from UI
-      setVictims((prev) => prev.filter((v) => (v.victimId || v.victim_id || v._id) !== victimId));
-      alert("Release created successfully");
-    } catch (err) {
-      setError(err.message || "Error creating release");
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  const getVictimId = (v) => v.victimId || v.victim_id || v._id || "";
-
-  return (
-    <div>
-      <StaffNavbar />
-      <div className="p-4">
-        <h2 className="text-xl font-semibold mb-4">Released Victims</h2>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p className="text-red-600">{error}</p>
-      ) : victims.length === 0 ? (
-        <p>No released victims found.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white shadow rounded">
-            <thead>
-              <tr className="bg-teal-800 text-white">
-                <th className="px-4 py-2 text-left">#</th>
-                <th className="px-4 py-2 text-left">Victim ID</th>
-                <th className="px-4 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {victims.map((v, idx) => {
-                const vid = getVictimId(v);
-                return (
-                  <tr key={vid || idx} className="border-b">
-                    <td className="px-4 py-2">{idx + 1}</td>
-                    <td className="px-4 py-2">{vid}</td>
-                    <td className="px-4 py-2">
-                      <button
-                        disabled={actionLoading !== null}
-                        onClick={() => createRelease(vid)}
-                        className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded disabled:opacity-60"
-                      >
-                        {actionLoading === vid ? "Processing..." : "Create Release"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-      <Footer />
-    </div>
-  );
-}
-
-export default ReleasedVictimsPage;
-*/
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from '../components/Footer';
 import StaffNavbar from '../components/StaffNavbar';
+import { getUserData } from "../utils/CommonFetches";
 
 function ReleasedVictimsPage() {
   const [victims, setVictims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState("");
-  const staffId = localStorage.getItem("staffId") || localStorage.getItem("id");
+  const [userData, setUserData] = useState(null);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
-  // ...existing fetchReleased useEffect...
- useEffect(() => {
-    if (!staffId) {
-      setError("Staff ID not found in localStorage");
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    if (!token) return;
+    getUserData(token, setUserData);
+  }, [token]);
+
+  useEffect(() => {
+    if (!userData?.id) return;
+
     const fetchReleased = async () => {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:5000/staff/${encodeURIComponent(staffId)}/released-victims`,
+          `http://localhost:5000/staff/${encodeURIComponent(userData.id)}/released-victims`,
           {
             headers: {
-              Authorization: token ? `Bearer ${token}` : undefined,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load");
-        // if backend returns object with victims key handle it
         setVictims(Array.isArray(data) ? data : data.victims || []);
       } catch (err) {
         setError(err.message || "Error fetching released victims");
@@ -168,95 +42,57 @@ function ReleasedVictimsPage() {
       }
     };
     fetchReleased();
-  }, [staffId, token]);
-/*
+  }, [userData?.id, token]);
+
   const createRelease = async (victimId) => {
     if (!confirm(`Create release for victim ${victimId}?`)) return;
     setActionLoading(victimId);
     setError("");
-    
+
     try {
       const endpoint = `http://localhost:5000/staff/${encodeURIComponent(
-        staffId
+        userData.id
       )}/create-release/${encodeURIComponent(victimId)}`;
 
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ victimId }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create release");
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (parseErr) {
+        data = text;
+      }
+
+      if (!res.ok) {
+        const msg = (data && (data.error || data.message)) || String(data) || `Request failed (${res.status})`;
+        throw new Error(msg);
+      }
 
       alert("Release created successfully");
+      window.location.reload();
     } catch (err) {
-      setError(err.message || "Error creating release");
-      console.error(err);
+      console.error("Create release failed:", err);
+      setError(err.message || "Failed to create release");
+      alert("Error creating release: " + (err.message || "Unknown error"));
     } finally {
       setActionLoading(null);
     }
-  };*/
-
-  // ...existing code...
-const createRelease = async (victimId) => {
-  if (!confirm(`Create release for victim ${victimId}?`)) return;
-  setActionLoading(victimId);
-  setError("");
-
-  try {
-    const endpoint = `http://localhost:5000/staff/${encodeURIComponent(
-      staffId
-    )}/create-release/${encodeURIComponent(victimId)}`;
-
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        Authorization: token ? `Bearer ${token}` : undefined,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ victimId }),
-    });
-
-    const text = await res.text();
-    let data;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch (parseErr) {
-      data = text; // server returned non-JSON (HTML or plain text)
-    }
-
-    console.log("createRelease response:", res.status, data);
-
-    if (!res.ok) {
-      // prefer structured server error, fallback to status/text
-      const msg = (data && (data.error || data.message)) || String(data) || `Request failed (${res.status})`;
-      throw new Error(msg);
-    }
-
-    // success
-    alert("Release created successfully");
-    // refresh list - simple reload (or call your fetchReleased if you extract it)
-    window.location.reload();
-  } catch (err) {
-    console.error("Create release failed:", err);
-    setError(err.message || "Failed to create release");
-    alert("Error creating release: " + (err.message || "Unknown error"));
-  } finally {
-    setActionLoading(null);
-  }
-};
-// ...existing code...
+  };
 
   const viewReleases = async (victimId) => {
-    navigate(`/view-releases/${staffId}/${victimId}`);
+    navigate(`/view-releases/${userData.id}/${victimId}`);
   };
 
   return (
-    <div>
+ <div className="min-h-screen flex flex-col">
       <StaffNavbar />
       <div className="p-4">
         <h2 className="text-xl font-semibold mb-4">Released Victims</h2>
@@ -288,6 +124,7 @@ const createRelease = async (victimId) => {
                         <button
                           onClick={() => createRelease(vid)}
                           className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-1 rounded"
+                          disabled={actionLoading === vid}
                         >
                           {actionLoading === vid ? "Processing..." : "Create Assessment"}
                         </button>

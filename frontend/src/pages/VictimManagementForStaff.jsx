@@ -2,18 +2,31 @@ import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import StaffNavbar from "../components/StaffNavbar";
 import VictimCard from "../components/VictimCard";
-import { getVictims } from "../utils/CommonFetches";
+
 
 function VictimManagementForStaff() {
   const [victimData, setVictimData] = useState([]);
 
-  const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
 
+  const getStaffVictims = async() =>{
+    try{
+      const res = await fetch(`http://localhost:5000/staff/get-my-victims`,{
+        headers:{
+          Authorization: `Bearer ${token}`
+        }
+      })
+      const data = await res.json();
+      setVictimData(data.victims);
+    }
+    catch(err){
+      console.log(err.message);
+    }
+  }
 
   useEffect(()=>{
-    getVictims(id, token, setVictimData);
-  },[token,id]);
+    getStaffVictims();
+  },[token]);
 
   return (
     <main className="w-full bg-stone-100 font-['QuickSand'] flex flex-col min-h-screen">

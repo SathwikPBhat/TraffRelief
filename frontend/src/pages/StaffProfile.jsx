@@ -7,7 +7,7 @@ import VictimCard from "../components/VictimCard";
 import Footer from "../components/Footer";
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
-
+import { getUserData } from "../utils/CommonFetches";
 
 function StaffAuditTable({ rows, onView }) {
   const navigate = useNavigate();
@@ -44,10 +44,8 @@ function StaffAuditTable({ rows, onView }) {
 
 function StaffProfile() {
   const token = localStorage.getItem("token");
-  const { staffId } = useParams();
-  const role = localStorage.getItem("role");
-  const isAdmin = role === "admin";
-  const isStaff = role === "staff";
+  const {staffId} = useParams();
+  const [userData, setUserData] = useState({});
   const [victimData, setVictimData] = useState([]);
   const [staffData, setStaffData] = useState({});
   const [audits, setAudits] = useState([]);         
@@ -68,19 +66,24 @@ function StaffProfile() {
     }
   };
 
-  // Fetch staff-specific audits
+
   const fetchStaffAudits = async () => {
-    if (!staffId) return;
+    if (!staffId || !userData?.role) return;
+    setLoadingAudits(true);
     try {
-      const res = await fetch(`http://localhost:5000/staff/${staffId}/audits`, {
+      const url =
+        userData.role === "admin"
+          ? `http://localhost:5000/admin/get-staff-audits/${staffId}`
+          : `http://localhost:5000/staff/${userData.id}/audits`;
+
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       if (res.ok) {
-        
         const rows = (data.audits || []).map(a => ({
           date: a.date ? new Date(a.date).toLocaleDateString() : "N/A",
-          id: a.auditId,                      
+          id: a.auditId,
           victim: a.victimName || "Unknown"
         }));
         setAudits(rows);
@@ -94,18 +97,31 @@ function StaffProfile() {
     }
   };
 
+  useEffect(() => {
+    if (!token || !staffId) return;
+    getUserData(token, setUserData);
+    getVictims(staffId, token, setVictimData);
+    getStaffData();
+  }, [token, staffId]);
+
+  useEffect(() => {
+    if (!userData?.role) return;
+    fetchStaffAudits();             
+  }, [userData?.role]);
+
   const handleAuditView = (auditId) => navigate(`/audit-summary/${auditId}`);
 
   useEffect(() => {
     getVictims(staffId, token, setVictimData);
     getStaffData();
     fetchStaffAudits();
+    getUserData(token, setUserData);
   }, [token, staffId]);
 
   return (
     <main className="w-full min-h-screen bg-stone-100 flex flex-col font-['QuickSand']">
-      {isAdmin && <AdminNavbar />}
-      {isStaff && <StaffNavbar />}
+      {userData.role === "admin" && <AdminNavbar />}
+      {userData.role === "staff" && <StaffNavbar />}
 
       <div className="w-full p-10 flex flex-col">
         <div className="w-full flex items-center justify-center lg:text-3xl md:text-3xl font-bold text-xl text-teal-700 ">

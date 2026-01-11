@@ -1,20 +1,27 @@
 import { useEffect, useState } from "react";
 import { IoMdNotifications } from "react-icons/io";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { getUserData } from "../utils/CommonFetches";
+import { toast } from "react-toastify";
 
 function StaffNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const location = useLocation();
-  const id = localStorage.getItem("id");
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const [userData, setUserData] = useState({});
+
+  useEffect(()=>{
+    getUserData(token ,setUserData);
+  },[token]);
 
   const getNotifications = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/staff/getNotifications/${id}`,
+          `http://localhost:5000/staff/getNotifications`,
           {
             method: "GET",
             headers: {
@@ -33,23 +40,16 @@ function StaffNavbar() {
       }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    toast.success("Logged out successfully")
+    navigate("/login");
+  };
+
   const handleDrawerClose = async () => {
     setNotifOpen(false);
-    // try {
-    //   await fetch(
-    //     `http://localhost:5000/admin/mark-all-notifications-read/${id}`,
-    //     {
-    //       method: "PATCH",
-    //       headers: {
-    //         Authorization: `Bearer ${token}`,
-    //         "Content-Type": "application/json",
-    //       },
-    //     }
-    //   );
-    // } catch (err) {
-    //   console.log("Failed to mark as read:", err.message);
-    // }
   };
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -84,6 +84,22 @@ function StaffNavbar() {
         });
   };
 
+  const navLinks = [
+    { path: "/staff/dashboard", label: "Dashboard" },
+    { path: "/staff/victim-details", label: "Victims" },
+    { path: "/staff/audit-list", label: "Audits" },
+    {
+      path: `/staff/${userData.id}/released-victims`,
+      label: "Released Victims",
+      condition: !!userData.id,
+    },
+    {
+      path: `/staff-profile/${userData.id}`,
+      label: "Profile",
+      condition: !!userData.id,
+    },
+  ];
+
   const getPageTitle = (path) => {
     if (path.startsWith("/victim-profile/")) return "Victim Profile";
     if (path.startsWith("/staff-profile/")) return "Staff Profile";
@@ -112,7 +128,7 @@ function StaffNavbar() {
               setNotifOpen(false);
             }}
             aria-label="Open menu"
-            className="text-white text-2xl leading-none"
+            className="text-white text-2xl leading-none hover:cursor-pointer"
             title="Menu"
           >
             &#9776;
@@ -158,7 +174,7 @@ function StaffNavbar() {
         <aside
           role="dialog"
           aria-modal="true"
-          className={`absolute right-0 top-0 h-full w-72 md:w-80 bg-white shadow-xl transform transition-transform duration-300
+          className={`absolute right-0 top-0 h-full w-72 md:w-80 bg-white shadow-xl transform transition-transform duration-300 flex flex-col
             ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
         >
           <div className="flex items-center justify-between p-4 border-b">
@@ -175,56 +191,35 @@ function StaffNavbar() {
             </button>
           </div>
 
-          <nav className="p-3 font-['QuickSand']">
-            <Link
-              to="/staff/dashboard"
-              onClick={() => setMenuOpen(false)}
-              className={`${linkBase} ${
-                isActive("/staff/dashboard") ? linkActive : linkIdle
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/staff/victim-details"
-              onClick={() => setMenuOpen(false)}
-              className={`${linkBase} ${
-                isActive("/staff/victim-details") ? linkActive : linkIdle
-              }`}
-            >
-              Victims
-            </Link>
-            <Link
-              to="/staff/audit-list"
-              onClick={() => setMenuOpen(false)}
-              className={`${linkBase} ${
-                isActive("/staff/audit-list") ? linkActive : linkIdle
-              }`}
-            >
-              Audits
-            </Link>
-
-            <Link
-              to={`/staff/${id}/released-victims`}
-              onClick={() => setMenuOpen(false)}
-              className={`${linkBase} ${
-                isActive(`/staff/${id}/released-victims`) ? linkActive : linkIdle
-              }`}
-            >
-              Released Victims
-            </Link>
-            <Link
-              to={`/staff-profile/${id}`}
-              onClick={() => setMenuOpen(false)}
-              className={`${linkBase} ${
-                isActive("/staff/profile") ? linkActive : linkIdle
-              }`}
-            >
-              Profile
-            </Link>
+          <nav className="p-3 font-['QuickSand'] flex-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setMenuOpen(false)}
+                className={`${linkBase} ${
+                  isActive(link.path) ? linkActive : linkIdle
+                }`}
+                style={{
+                  pointerEvents: link.condition === false ? "none" : "auto",
+                  opacity: link.condition === false ? 0.5 : 1,
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          <div className="mt-auto p-4 text-xs text-slate-500">
+          <div className="p-3 border-t">
+            <button
+              onClick={handleLogout}
+              className="w-full px-4 py-3 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition font-medium"
+            >
+              Logout
+            </button>
+          </div>
+
+          <div className="p-4 text-xs text-slate-500">
             <p className="text-center">TraffRelief Staff</p>
           </div>
         </aside>

@@ -9,7 +9,6 @@ import { fetchCentreDetails } from "../utils/CommonFetches";
 import AddVictimModalForAdmin from "../components/AddVictimModalForAdmin";
 
 function VictimManagementForAdmin() {
-  const adminId = localStorage.getItem("id");
   const token = localStorage.getItem("token");
 
   const [victimData, setVictimData] = useState([]);
@@ -40,7 +39,7 @@ function VictimManagementForAdmin() {
   const getStaffDetails = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/view-staffs/${adminId}`,
+        `http://localhost:5000/admin/view-staffs`,
         {
           method: "GET",
           headers: {
@@ -61,7 +60,7 @@ function VictimManagementForAdmin() {
   const fetchVictimDetails = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/get-victim-details/${adminId}`,
+        `http://localhost:5000/admin/get-victim-details`,
         {
           method: "GET",
           headers: {
@@ -92,10 +91,10 @@ function VictimManagementForAdmin() {
   };
 
   useEffect(() => {
-    fetchCentreDetails(adminId, token, setCentres);
+    fetchCentreDetails(token, setCentres);
     fetchVictimDetails();
     getStaffDetails();
-  }, [token, adminId]);
+  }, [token]);
 
   const handleSearch = (e) => {
     const str = e.target.value.trim().toLowerCase();

@@ -7,17 +7,19 @@ import AuditTable from "../components/AuditTable";
 import Footer from "../components/Footer";
 import InitialDetailsModal from "../components/InitialDetailsModal";
 import StaffNavbar from "../components/StaffNavbar";
+import { getUserData } from "../utils/CommonFetches";
 
 function VictimProfile() {
   const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
   const navigate = useNavigate();
   const { victimId } = useParams();
 
+  const [userData, setUserData] = useState({});
   const [victimData, setVictimData] = useState(null);
   const [auditData, setAuditData] = useState([]);
   const [showInitModal, setShowInitModal] = useState(false);
   const [loadingAudits, setLoadingAudits] = useState(true);
+
 
   const getVictimData = async () => {
     try {
@@ -35,7 +37,6 @@ function VictimProfile() {
     }
   };
 
-  // Fetch audits for this victim (expects backend route /staff/victim/:victimId/audits)
   const getVictimAudits = async () => {
     try {
       const res = await fetch(`http://localhost:5000/staff/victim/${victimId}/audits`, {
@@ -63,6 +64,7 @@ function VictimProfile() {
     if (token && victimId) {
       getVictimData();
       getVictimAudits();
+      getUserData(token, setUserData);
     }
   }, [token, victimId]);
 
@@ -86,7 +88,7 @@ function VictimProfile() {
 
   return (
     <main className="w-full min-h-screen bg-stone-100 font-['QuickSand'] flex flex-col">
-      {role === "admin" ? <AdminNavbar /> : <StaffNavbar />}
+      {userData.role === "admin" ? <AdminNavbar /> : <StaffNavbar />}
 
       <div className={`w-full p-8 ${showInitModal ? "blur-sm pointer-events-none select-none" : ""}`}>
         <div className="w-full flex items-center justify-center text-teal-700 lg:text-3xl md:text-3xl text-xl font-semibold mb-14">
@@ -148,7 +150,7 @@ function VictimProfile() {
           </div>
         </div>
 
-        {isActive && role === "admin" && (
+        {isActive && userData.role === "admin" && (
           <div className="w-full flex justify-end mt-5">
             {hasInitialDetails ? (
               <div className="px-4 py-2 rounded-xl bg-green-50 border border-green-300 text-green-700 font-medium">
@@ -162,7 +164,7 @@ function VictimProfile() {
           </div>
         )}
 
-        {isActive && role !== "admin" && !hasInitialDetails && (
+        {isActive && userData.role !== "admin" && !hasInitialDetails && (
           <div className="w-full flex justify-end mt-5">
             <button
               onClick={() => setShowInitModal(true)}
@@ -173,7 +175,7 @@ function VictimProfile() {
           </div>
         )}
 
-        {isActive && role !== "admin" && hasInitialDetails && (
+        {isActive && userData.role !== "admin" && hasInitialDetails && (
           <div className="w-full flex justify-end mt-5">
             <button
               onClick={() => navigate(`/audit/${victimId}`)}
@@ -196,6 +198,7 @@ function VictimProfile() {
             <AuditTable
               tableHeaders={["Date", "ID", "Staff", "Action"]}
               tableData={auditData}
+              onView={(row) => navigate(`/audit-summary/${row.id}`)}
             />
           )}
         </div>

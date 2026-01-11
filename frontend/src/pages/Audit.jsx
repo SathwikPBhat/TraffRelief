@@ -5,6 +5,7 @@ import StaffNavbar from "../components/StaffNavbar";
 import PhysicalAssessment from "../components/auditForms/PhysicalAssessment";
 import ProgressTracking from "../components/auditForms/ProgressTracking";
 import PsychologicalAssessment from "../components/auditForms/PsychologicalAssessment";
+import { getUserData } from "../utils/CommonFetches";
 
 function Audit() {
   const tabs = [
@@ -14,14 +15,13 @@ function Audit() {
   ];
   const { victimId } = useParams();
   const token = localStorage.getItem("token");
-  const id = localStorage.getItem("id");
+  const [userData, setUserData] = useState(null);
   const [victimData, setVictimData] = useState(null);
   const [tabIndex, setTabIndex] = useState(0);
   const currentTab = tabs[tabIndex].id;
   const currentLabel = tabs[tabIndex].label;
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    // Physical & Medical
     physicalSymptoms: [],
     otherPhysicalSymptoms: "",
     physicalInjuries: "",
@@ -32,8 +32,6 @@ function Audit() {
     sleepPatterns: "",
     otherSleepPatterns: "",
     physicalAdditionalNotes: "",
-
-    // Psychological & Emotional
     traumaIndicators: [],
     otherTrauma: "",
     depressionSymptoms: [],
@@ -49,8 +47,6 @@ function Audit() {
     otherTrust: "",
     mentalHealthFactors: [],
     otherMentalHealth: "",
-
-    // Progress Tracking
     activitiesPerformed: [],
     otherActivities: "",
     therapyAttendance: "",
@@ -68,11 +64,7 @@ function Audit() {
     medicationAdherence: "",
     otherMedicationAdherence: "",
     progressAdditionalNotes: "",
-
-    // Social
     socialNotes: "",
-
-    // Final notes (last tab)
     additionalNotes: "",
   });
 
@@ -92,36 +84,43 @@ function Audit() {
     if (tabIndex > 0) setTabIndex((i) => i - 1);
   };
 
-  const getVictimData = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/staff/get-victim/${victimId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setVictimData(data.victim);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (err) {
-      toast.error(err.message);
-    }
-  };
+  useEffect(() => {
+    if (!token) return;
+    getUserData(token, setUserData);
+  }, [token]);
 
   useEffect(() => {
-    getVictimData();
-  }, [token, id]);
+    if (!userData?.id || !victimId) return;
 
-  // In handleSubmit replace the current fetch block with this:
+    const getVictimData = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/staff/get-victim/${victimId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await res.json();
+        if (res.ok) {
+          setVictimData(data.victim);
+        } else {
+          toast.error(data.message);
+        }
+      } catch (err) {
+        toast.error(err.message);
+      }
+    };
+
+    getVictimData();
+  }, [userData?.id, victimId, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!userData?.id) {
+      toast.error("User data not loaded");
+      return;
+    }
 
     const pick = (arr) =>
       Array.isArray(arr) && arr.length
@@ -129,7 +128,6 @@ function Audit() {
         : "";
 
     const auditPayload = {
-      // Physical & Medical
       currentPhysicalSymptoms:
         pick(formData.physicalSymptoms) +
         (formData.otherPhysicalSymptoms
@@ -146,8 +144,6 @@ function Audit() {
       sleepPatterns:
         pick(formData.sleepPatterns) +
         (formData.otherSleepPatterns ? `, ${formData.otherSleepPatterns}` : ""),
-
-      // Psychological & Emotional
       traumaIndicators:
         pick(formData.traumaIndicators) +
         (formData.otherTrauma ? `, ${formData.otherTrauma}` : ""),
@@ -177,8 +173,6 @@ function Audit() {
         .filter(Boolean)
         .join(" ")
         .trim(),
-
-      // Progress Tracking
       gamesActivitiesTasksPerformedConductedGiven:
         pick(formData.activitiesPerformed) +
         (formData.otherActivities ? `, ${formData.otherActivities}` : ""),
@@ -207,7 +201,7 @@ function Audit() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/staff/${id}/${victimId}/add-audit`,
+        `http://localhost:5000/staff/${userData.id}/${victimId}/add-audit`,
         {
           method: "POST",
           headers: {
@@ -237,7 +231,7 @@ function Audit() {
           {currentLabel}
         </div>
         <div className="w-full text-xl font-semibold text-teal-700 flex items-center justify-center">
-          Date: 8/11/2025
+          Date: {new Date().toLocaleDateString()}
         </div>
         <div className="w-full text-xl font-semibold text-teal-700 flex items-center justify-center">
           Victim Name : {victimData ? victimData.fullName : "Loading..."}
@@ -269,7 +263,6 @@ function Audit() {
               />
             )}
 
-            {/* Navigation / Submit */}
             <div className="flex justify-between items-center mt-10">
               <button
                 type="button"

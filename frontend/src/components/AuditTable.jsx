@@ -2,9 +2,8 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-function AuditTable({ tableHeaders, tableData }) {
+function AuditTable({ tableHeaders, tableData, onView }) {
   const navigate = useNavigate();
-
   return (
     <div className="w-full overflow-hidden rounded-2xl shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] hover:scale-101 transition">
       <table className="w-full border-y-3 border-x-2 border-teal-700">
@@ -29,10 +28,14 @@ function AuditTable({ tableHeaders, tableData }) {
                 <td className="py-3 px-4 text-sm text-slate-900">{val.date}</td>
                 <td className="py-3 px-4 text-sm text-slate-900">{val.id}</td>
                 <td className="py-3 px-4 text-sm text-slate-900">
-                  {val.victimId}
+                  {val.victimId ? val.victimId : val.staffName}
                 </td>
                 <td
-                  onClick={() => navigate(`/audit/${val.victimId}`)}
+                  onClick={() =>
+                    onView
+                      ? onView(val)
+                      : navigate(`/audit/${val.victimId || val.id}`)
+                  }
                   className="py-3 px-4 text-sm text-teal-600 font-medium cursor-pointer hover:underline"
                 >
                   View

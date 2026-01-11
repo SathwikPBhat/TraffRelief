@@ -167,42 +167,32 @@ async function addAudit(req,res){
 */
 async function getPendingAudits(req,res){
     try {
-        const {staffId}=req.params;
-        if(!staffId){
-            return res.status(400).json({ error: "staffId parameter is required" });
-        }
+        const staffId = req.user.id;
+        if(!staffId) return res.status(400).json({ error: "staffId parameter is required" });
+
 
         const staff = await Staff.findOne({ staffId });
-        if(!staff){
-            return res.status(404).json({ error: "Staff not found" });
-        }
+        if(!staff) return res.status(404).json({ error: "Staff not found" });
 
         const now = new Date();
-        console.log("getPendingAudits - now:", now.toISOString(), "for staffId:", staffId);
 
-        // fetch audits that have a next_audit_date field (any type)
         const auditsWithField = await Audit.find({
             'result.next_audit_date': { $exists: true, $ne: null }
-        }).populate('victimId', 'victimId _id');
+        }).populate('victimId', 'victimId _id status isActive');
 
-        // filter in JS to handle string dates or Date objects
-        const pending = auditsWithField.filter(a => {
-            try {
-                const raw = a.result && a.result.next_audit_date;
-                if (!raw) return false;
-                const d = new Date(raw);
-                if (isNaN(d)) {
-                    console.warn("Skipping audit with invalid date:", raw, "auditId:", a._id);
-                    return false;
-                }
-                return d <= now;
-            } catch (err) {
-                console.error("Error parsing next_audit_date for audit:", a._id, err);
-                return false;
-            }
-        });
+    const pending = auditsWithField.filter((a) => {
+      const raw = a.result?.next_audit_date;
+      if (!raw) return false;
+      const d = new Date(raw);
+      if (isNaN(d) || d > now) return false;
 
-        console.log("getPendingAudits - total found:", auditsWithField.length, "pending after filter:", pending.length);
+      const v = a.victimId;
+      if (!v) return false;
+      const activeByFlag = v.isActive !== false;
+      const activeByStatus = v.status ? v.status.toLowerCase() !== "released" : true;
+      return activeByFlag && activeByStatus;
+    });
+       
         return res.status(200).json(pending);
     } catch (error) {
         console.error("Error retrieving pending audits:", error);

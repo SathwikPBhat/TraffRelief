@@ -1,15 +1,13 @@
-import React,{useState} from 'react'
-import { useEffect } from 'react';
+import React,{useState, useEffect} from 'react'
 import { IoCloseCircleOutline } from "react-icons/io5";
 import { toast } from 'react-toastify';
+import { createPortal } from 'react-dom';
 
 function AddStaffModal({showModal}) {
     const [loading, setLoading] = useState(false);
     const [centreData, setCentreData] = useState([]);
-    const adminId = localStorage.getItem("id");
     const token = localStorage.getItem("token");
     const [formData, setFormData] = useState({
-        id: adminId, 
         fullName: '',
         email: '',
         phoneNumber: '',
@@ -26,38 +24,33 @@ function AddStaffModal({showModal}) {
 
     const getCentreDetails = async() =>{ 
         try{
-            const res = await fetch(`http://localhost:5000/stats/centre-details/${adminId}`,{
+            const res = await fetch(`http://localhost:5000/stats/centre-details`,{
                 method:"GET",
-                headers:{
-                    Authorization : `Bearer ${token}`
-                }
+                headers:{ Authorization : `Bearer ${token}` }
             })
             const data = await res.json();
             if(res.status == 200){
                 setCentreData(data.centresUnderAdmin);
-                console.log(data.centresUnderAdmin)
-            }
-            else{
+            } else{
                 toast.error(data.message, {toastId: "centreFetchError"});
             }
-        }   
-        catch(err){
+        } catch(err){
             toast.error(err.message, {toastId: "centreFetchError"});
         }
     }
+
     useEffect(()=>{
         getCentreDetails();
-    },[token, adminId]);
-
+    },[token]);
 
     const handleSubmit= async(e)=>{
         e.preventDefault();
         setLoading(true);
-        console.log(formData);
         try{
            const res =  await fetch('http://localhost:5000/admin/add-staff',{
                 method:'POST',
                 headers:{
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type':'application/json'
                 },
                 body:JSON.stringify(formData)
@@ -76,82 +69,54 @@ function AddStaffModal({showModal}) {
                     role:'',
                     file: null
                 })
-                setLoading(false);
-            }
-            else{
+            } else {
                 toast.error(data.message, {toastId: "addStaffError"});
-                setLoading(false);
             }
-        }
-        catch(err){
-            toast.error(data.message, {toastId: "addStaffError"});
+        } catch(err){
+            toast.error(err.message, {toastId: "addStaffError"});
+        } finally {
             setLoading(false);
         }
     }
 
-  return (
-    <div className="flex items-center justify-center bg-black/40 backdrop-blur-sm z-50 border border-teal-800 m-4 rounded-xl">
-        <div className="bg-stone-100 font-['QuickSand']  rounded-xl w-full ">
-            <div className='flex p-4 items-center justify-center shadow-[0px_2px_20px_0px_rgba(96,125,139,0.50)] border-b border-b-green-600 bg-stone-200'>
+    return createPortal(
+      <>
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
+          onClick={()=>showModal(false)}
+        />
+        <div className="fixed inset-0 z-[61] flex items-start justify-center overflow-y-auto p-4 sm:p-6">
+          <div className="relative mx-auto my-8 w-[92%] max-w-3xl">
+            <div className="bg-stone-100 font-['QuickSand'] border border-teal-700 rounded-xl shadow-lg">
+              <div className='relative flex p-4 items-center justify-center border-b border-teal-600 bg-stone-200 rounded-t-xl'>
                 <p className='text-2xl font-semibold'>Add Staff</p>
-                <IoCloseCircleOutline onClick={()=>showModal(false)} className='justify-end hover:text-red-500 hover:scale-130 hover:cursor-pointer absolute right-4'/>
-            </div>
-            <div className='flex py-4 px-6 w-full justify-center'>
-                {/* <form onSubmit={handleSubmit} className='w-full border border-teal-600 shadow-[0px_2px_4px_0px_rgba(0,105,92,1.00)] rounded-xl p-6'>
-                    <div className='flex items-center justify-between gap-4 mb-4 w-full'>
-                        <div className='flex flex-col gap-2 w-1/2'>
-                            <label htmlFor="name">Name</label>
-                            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="h-10 p-2 rounded-xl border border-teal-800"/>
-                        </div>
-                        <div className='flex flex-col gap-2 w-1/2'>
-                            <label htmlFor="email">Email</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange}  className="h-10 p-2 rounded-xl border border-teal-800"/>
-                        </div>
-                    </div>
-                    <div className='w-full flex items-center gap-4 mb-4'>
-                        <div className='flex flex-col gap-2 w-1/4'>
-                            <label htmlFor="phone">Phone Number</label>
-                            <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange = {handleChange} className="h-10 p-2 rounded-xl border border-teal-800"/>
-                        </div>
-                        <div className='flex flex-col gap-2 w-1/3'>
-                            <label htmlFor="password">Password</label>
-                            <input type="password" name="password" value={formData.password} onChange={handleChange}className="h-10 p-2 rounded-xl border border-teal-800"/>
-                        </div>
-                        <div className='flex flex-col gap-2 w-1/3'>
-                            <label htmlFor="center">Center</label>
-                            <select name="center" value={formData.center} onChange = {handleChange}className='p-2 border border-teal-800 rounded-xl'>
-                                <option value="#">----Select A Center----</option>
-                                <option value="center1">Center 1</option>
-                                <option value="center2">Center 2</option>
-                                <option value="center3">Center 3</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className='flex flex-col gap-2 mb-4'>
-                        <input type="file" className=' p-2 flex w-full border border-teal-800 h-10 rounded-xl'/>
-                    </div>
-                    
-                    <div className='flex flex-col gap-2 mb-4 items-center justify-center'>
-                        <button type="submit" className='w-1/3 h-10 bg-teal-600 text-white justify-center items-center rounded-xl p-2'>
-                        {
-                            loading ? 'Adding...' : 'Add Staff'
-                        }
-                        </button>
-                    </div>
-                </form> */}
-                <form onSubmit={handleSubmit} className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 lg:gap-4 gap-2 border border-teal-600 shadow-[0px_2px_4px_0px_rgba(0,105,92,1.00)] rounded-xl p-6'>
+                <button
+                  onClick={()=>showModal(false)}
+                  aria-label="Close"
+                  className='absolute right-4 text-teal-800 hover:text-teal-900'
+                >
+                  <IoCloseCircleOutline className='text-2xl hover:text-red-700'/>
+                </button>
+              </div>
+
+              <div className='flex py-4 px-6 w-full justify-center'>
+                <form onSubmit={handleSubmit} className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 lg:gap-4 gap-2 border border-teal-600 shadow-[0px_2px_4px_0px_rgba(0,105,92,1.00)] rounded-xl p-6 w-full'>
+                    {/* Name */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="name">Name</label>
                         <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full h-10 p-2 rounded-xl border border-teal-800 mb-4"/>
                     </div>
+                    {/* Email */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="email">Email</label>
                         <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full h-10 p-2 rounded-xl border border-teal-800 mb-4"/>
                     </div>
+                    {/* Phone */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="phoneNumber">Phone Number</label>
                         <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} className="w-full h-10 p-2 rounded-xl border border-teal-800 mb-4"/>
                     </div>
+                    {/* Role */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="role">Role</label>
                         <select name="role" value={formData.role} onChange={handleChange} className='w-full p-2 border border-teal-800 rounded-xl mb-4'>    
@@ -163,39 +128,47 @@ function AddStaffModal({showModal}) {
                             <option value="psychologist">Psychologist</option>
                         </select>
                     </div>
+                    {/* Password */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="password">Password</label>
                         <input type="password" name="password" value={formData.password} onChange={handleChange} className="w-full h-10 p-2 rounded-xl border border-teal-800 mb-4"/>
                     </div>
+                    {/* Centre */}
                     <div className='flex flex-col gap-2 mb-4'>
                         <label htmlFor="center">Center</label>
                         <select name="center" value={formData.center} onChange={handleChange} className='w-full p-2 border border-teal-800 rounded-xl mb-4'>    
                             <option value="">----Select A Center----</option>
-                            {
-                                centreData.map((centre, idx) => {
-                                    return (
-                                        <option key = {idx} value={centre.centreId}>{centre.centreName}</option>
-                                    )
-                                })
-                            }
+                            {centreData.map((centre, idx) => (
+                              <option key={idx} value={centre.centreId}>
+                                {centre.centreName}
+                              </option>
+                            ))}
                         </select>
                     </div>
+                    {/* File */}
                     <div className='flex flex-col gap-2 mb-4 lg:col-span-2'>
                         <label htmlFor="file">Upload File</label>
-                        <input type="file" className=' w-full p-2 border border-teal-800 h-10 rounded-xl mb-4'/>
+                        <input
+                          type="file"
+                          name="file"
+                          onChange={(e)=> setFormData(prev => ({...prev, file: e.target.files?.[0] || null}))}
+                          className=' w-full p-2 border border-teal-800 h-10 rounded-xl mb-4'
+                        />
                     </div>
+                    {/* Submit */}
                     <div className='flex flex-col gap-2 mb-4 items-center justify-center lg:col-span-2 md:col-span-2'>
                         <button type="submit" className='w-1/3 min-h-10 bg-teal-600 text-white justify-center items-center rounded-xl p-2'>
-                        {
-                            loading ? 'Adding...' : 'Add Staff'
-                        }
+                          {loading ? 'Adding...' : 'Add Staff'}
                         </button>
                     </div>
                 </form>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-  )
+      </>,
+      document.body
+    );
 }
 
 export default AddStaffModal

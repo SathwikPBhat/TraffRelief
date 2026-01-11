@@ -30,6 +30,7 @@ const handleLogin = async(req, res) =>{
            }
            else{
                 const token = jwt.sign({id: foundStaff.staffId, role:'staff'}, process.env.SECRET_KEY, {expiresIn: "2h"});
+                console.log(token);
                 return res.status(200).json({message : "Staff login successful", token: token});
            }
         }
@@ -43,4 +44,17 @@ const handleLogin = async(req, res) =>{
 
 }
 
-module.exports = {handleLogin}
+const fetchUserData = async(req, res) =>{
+    try{
+        const {id, role} = req.user;
+        if(!id || !role){
+            return res.status(400).json({message: "Forbidden"})
+        }
+        return res.status(200).json({id, role})
+    }
+    catch(err){
+        return res.status(500).json({message: err.message})
+    }
+}
+
+module.exports = {handleLogin, fetchUserData}

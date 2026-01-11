@@ -7,7 +7,8 @@ const Victim = require('../models/victim.js');
 
 const getStaffDetails = async(req, res) => {
     try{
-        const {adminId} = req.params;
+      
+        const adminId = req.user.id;
         console.log(adminId);
         if(!adminId){
             return res.status(401).json({message: "Admin id is required"});
@@ -30,7 +31,7 @@ const getStaffDetails = async(req, res) => {
 
 const getCentreDetails = async (req, res) =>{
     try{
-        const {adminId} = req.params;
+        const adminId = req.user.id;
         if(!adminId){
             return res.status(401).json({message: "Admin id is required"});
         }
@@ -52,7 +53,7 @@ const getCentreDetails = async (req, res) =>{
 
 const getCentresForAnalytics = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     
     if (!adminId) {
       return res.status(401).json({ message: "Admin id is required" });
@@ -75,7 +76,7 @@ const getCentresForAnalytics = async (req, res) => {
 
 const getDistinctRoles = async(req, res) =>{
     try{
-        const {adminId} = req.params;
+        const adminId = req.user.id;
         console.log(adminId);
         if(!adminId){
             return res.status(401).json({message: "Admin id is required"});
@@ -90,7 +91,7 @@ const getDistinctRoles = async(req, res) =>{
 
 const getVictimDetails = async(req, res) =>{
     try{
-        const {adminId} = req.params;
+        const adminId = req.user.id;
         if(!adminId){
             return res.status(401).json({message: "Admin id is required"});
         }
@@ -116,7 +117,7 @@ const getVictimDetails = async(req, res) =>{
 
 const getTraffickingTypes = async(req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const { centreId } = req.query;
     
     if (!adminId) {
@@ -161,7 +162,7 @@ const getTraffickingTypes = async(req, res) => {
 
 const getVictimsByGender = async(req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const { centreId } = req.query;
     
     if (!adminId) {
@@ -199,7 +200,7 @@ const getVictimsByGender = async(req, res) => {
 
 const getVictimsByAge = async(req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const { centreId } = req.query;
     
     if (!adminId) {
@@ -241,7 +242,7 @@ const getVictimsByAge = async(req, res) => {
 
 const getVictimsByStatus = async(req, res) =>{
   try{
-    const {adminId} = req.params;
+    const adminId = req.user.id;
     const {centreId} = req.query;
 
     if(!adminId){

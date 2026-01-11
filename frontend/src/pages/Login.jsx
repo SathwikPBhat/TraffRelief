@@ -23,7 +23,6 @@ function Login() {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    console.log(loginData);
     try{
         const res = await fetch('http://localhost:5000/user/login',{
               method: 'POST',
@@ -37,8 +36,6 @@ function Login() {
 
           toast.success(data.message, {toastId : "loginSuccess"});
           localStorage.setItem("token", data.token);
-          localStorage.setItem("id", loginData.id);
-          localStorage.setItem("role", loginData.role);
           if(loginData.role === 'admin'){
             navigate('/admin/dashboard');
           }

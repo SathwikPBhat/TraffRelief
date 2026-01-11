@@ -1,13 +1,15 @@
 const router = require('express').Router();
 const {getStaffDetails, getCentreDetails, getDistinctRoles, getVictimDetails, getTraffickingTypes, getVictimsByGender, getVictimsByAge, getCentresForAnalytics, getVictimsByCentreHeatmap, getActiveCasesByCentre, getAdmissionTrend, getVictimsByStatus} = require('../controllers/stats.js');
+const { verifyToken } = require('../middlewares/authentication.js');
 
-router.get('/staff-details/:adminId', getStaffDetails);
-router.get('/centre-details/:adminId', getCentreDetails);
-router.get('/distinct-roles/:adminId', getDistinctRoles);
-router.get('/victim-details/:adminId', getVictimDetails);
-router.get('/get-trafficking-types/:adminId', getTraffickingTypes);
-router.get('/get-victims-by-gender/:adminId', getVictimsByGender);
-router.get('/get-victims-by-age/:adminId', getVictimsByAge);
-router.get('/get-centres-for-analytics/:adminId', getCentresForAnalytics);
-router.get('/get-victims-by-status/:adminId', getVictimsByStatus)
+router.get('/staff-details', verifyToken, getStaffDetails);
+router.get('/centre-details', verifyToken, getCentreDetails);
+router.get('/distinct-roles', verifyToken, getDistinctRoles);
+router.get('/victim-details', verifyToken, getVictimDetails);
+router.get('/get-trafficking-types', verifyToken, getTraffickingTypes);
+router.get('/get-victims-by-gender', verifyToken, getVictimsByGender);
+router.get('/get-victims-by-age',  verifyToken, getVictimsByAge);
+router.get('/get-centres-for-analytics',  verifyToken, getCentresForAnalytics);
+router.get('/get-victims-by-status', verifyToken, getVictimsByStatus)
+
 module.exports = router;

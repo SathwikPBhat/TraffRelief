@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 function AddVictimModalForAdmin({ onClose }) {
   const [langs, setLangs] = useState([]);
   const token = localStorage.getItem("token");
-  const adminId = localStorage.getItem("id");
   const [centres, setCentres] = useState([]);
 
   const [controlMethods, setControlMethods] = useState([]);
@@ -135,7 +134,6 @@ const handleSubmit = async (e) => {
   fd.append("traffickingType", formData.traffickingType);
   fd.append("locations", formData.locations);
   fd.append("duration", formData.duration);
-  fd.append("centre", formData.centre); 
  
   fd.append("languagesSpoken", JSON.stringify(langs.map(l => l.label)));
   fd.append("controlMethods", JSON.stringify(controlMethods.map(c => c.label)));
@@ -145,7 +143,7 @@ const handleSubmit = async (e) => {
   }
  
   try {
-    const res = await fetch(`http://localhost:5000/admin/add-victim/${adminId}`, {
+    const res = await fetch(`http://localhost:5000/admin/add-victim`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -167,7 +165,7 @@ const handleSubmit = async (e) => {
 
 
   useEffect(() => {
-    fetchCentreDetails(adminId, token, setCentres);
+    fetchCentreDetails(token, setCentres);
     console.log(centres);
   }, []);
 
@@ -220,7 +218,7 @@ const handleSubmit = async (e) => {
                       className="h-8 p-2 border border-teal-600 rounded-xl bg-stone-100"
                     />
                   </div>
-                  <div className="flex flex-col gap-2 lg:col-start-1 lg:col-end-2">
+                  <div className="flex flex-col gap-2 lg:col-start-1 lg:col-end-3">
                     <label htmlFor="gender">Gender</label>
                     <select
                       name="gender"
@@ -234,7 +232,7 @@ const handleSubmit = async (e) => {
                       <option value="O">Other</option>
                     </select>
                   </div>
-                  <div className="flex flex-col gap-2 lg:col-start-2 lg:col-end-4">
+                  <div className="flex flex-col gap-2 lg:col-start-3 lg:col-end-6">
                     <label htmlFor="language">Languages Spoken</label>
                     <Select
                       options={languageOptions}
@@ -247,22 +245,6 @@ const handleSubmit = async (e) => {
                       styles={customStyles}
                       classNamePrefix="react-select"
                     />
-                  </div>
-                  <div className="flex flex-col gap-2 lg:col-start-4 lg:col-end-6">
-                    <label htmlFor="centre">Center</label>
-                    <select
-                      name="centre"
-                      value={formData.centre}
-                      onChange={handleChange}
-                      className="h-8 px-2  border border-teal-600 rounded-xl bg-stone-100 overflow-ellipsis"
-                    >
-                      <option value="">---Select a Center---</option>
-                      {centres.map((centre, idx) => (
-                        <option key={idx} value={centre}>
-                          {centre}
-                        </option>
-                      ))}
-                    </select>
                   </div>
                 </div>
               </div>

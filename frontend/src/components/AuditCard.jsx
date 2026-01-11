@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'; // ADD
+import { useNavigate } from 'react-router-dom'; 
 
 function AuditCard({ data }) {
   const { auditId, date, staffName, victimName } = data; 

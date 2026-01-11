@@ -1,66 +1,127 @@
-const Staff = require('../models/staff.js');
-const Victim = require('../models/victim.js');
+const Staff = require("../models/staff.js");
+const Victim = require("../models/victim.js");
 const activityLog = require("../models/activityLog.js");
-const {v4:uuidv4} = require('uuid');
-const Release=require('../models/release.js');
-const Audit = require('../models/audit');
+const { v4: uuidv4 } = require("uuid");
+const Release = require("../models/release.js");
+const Audit = require("../models/audit");
+const Admin = require("../models/admin.js");
 
-const getVictims = async(req, res) =>{
-    try{
-        const {staffId} = req.params;
-        if(!staffId){
-            return res.status(401).json({message: "StaffId is required"});
-        }
-        const staff = await Staff.findOne({staffId});
-        if(!staff){
-            return res.status(404).json({message: "No staff found"});
-        }
-        const victims = await Victim.find({staff: staff._id});
-        return res.status(200).json({message: "Victim data retrieval successful", victims: victims});
-    }
-    catch(err){
-        return res.status(500).json({message: err.message});
-    }
-}
+const getMyVictims = async (req, res) => {
+  try {
+    const staffId = req.user.id;
 
-const getVictimById = async(req, res) =>{
-    try{
-        const {victimId} = req.params;
-        if(!victimId){
-            return res.status(401).json({message: "VictimId is required"});
-        }
-        const victim = await Victim.findOne({victimId}).populate('centre').populate('staff');
-        if(!victim){
-            return res.status(404).json({message: "No victim found"});
-        }
-        return res.status(200).json({message: "Victim data retrieval successful", victim: victim});
-    }
-    catch(err){
-        return res.status(500).json({message: err.message});
-    }
-}
+    const staff = await Staff.findOne({ staffId });
 
-const getStaffById = async(req, res) =>{
-    try{
-        const {staffId} = req.params;
-        if(!staffId){
-            return res.status(401).json({message: "staffId is required"});
-        }
-        const staff = await Staff.findOne({staffId}).populate('centre');
-        if(!staff){
-            return res.status(404).json({message: "No staff found"});
-        }
-        return res.status(200).json({message: "Staff data retrieval successful", staff: staff});
-    }
-    catch(err){
-        return res.status(500).json({message: err.message});
-    }
-}
+    const victims = await Victim.find({ staff: staff._id });
+    return res
+      .status(200)
+      .json({ message: "Victim data retrieval successful", victims });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
-// Get notifications using activity logs for a specific staff member
-const getNotifications = async (req, res) => {
+const getVictims = async (req, res) => {
   try {
     const { staffId } = req.params;
+    const { id, role } = req.user || {};
+
+    if (!staffId)
+      return res.status(400).json({ message: "staffId is required" });
+    if (!role) return res.status(401).json({ message: "Unauthorized" });
+    if (role !== "admin" && role !== "staff") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (role === "staff" && staffId !== id) {
+      return res
+        .status(403)
+        .json({ message: "You can only view your own profile" });
+    }
+
+    const staff = await Staff.findOne({ staffId });
+    if (!staff) return res.status(404).json({ message: "No staff found" });
+
+    if (role === "admin") {
+      const admin = await Admin.findOne({ adminId: id });
+      if (!admin || staff.reportsTo?.toString() !== admin._id.toString()) {
+        return res.status(403).json({ message: "Staff not under this admin" });
+      }
+    }
+
+    const victims = await Victim.find({ staff: staff._id });
+    return res
+      .status(200)
+      .json({ message: "Victim data retrieval successful", victims });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+const getVictimById = async (req, res) => {
+  try {
+    const { victimId } = req.params;
+    if (!victimId) {
+      return res.status(401).json({ message: "VictimId is required" });
+    }
+    const victim = await Victim.findOne({ victimId })
+      .populate("centre")
+      .populate("staff");
+    if (!victim) {
+      return res.status(404).json({ message: "No victim found" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Victim data retrieval successful", victim: victim });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+const getStaffById = async (req, res) => {
+  try {
+    const {id, role} = req.user || {};
+    const {staffId} = req.params;
+
+    if (!staffId) {
+      return res.status(400).json({ message: "staffId is required" });
+    }
+    if (!role) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (role !== "admin" && role !== "staff") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    if (role === "staff" && staffId !== id) {
+      return res
+        .status(403)
+        .json({ message: "You can only view your own profile" });
+    }
+
+    const staff = await Staff.findOne({ staffId }).populate("centre");
+    if (!staff) {
+      return res.status(404).json({ message: "No staff found" });
+    }
+
+    if (role === "admin") {
+      const admin = await Admin.findOne({ adminId: id });
+      if (!admin || staff.reportsTo?.toString() !== admin._id.toString()) {
+        return res
+          .status(403)
+          .json({ message: "Staff not under this admin" });
+      }
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Staff data retrieval successful", staff: staff });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
+
+
+const getNotifications = async (req, res) => {
+  try {
+    const staffId = req.user.id;
     if (!staffId) {
       return res.status(400).json({ message: "Staff ID is required" });
     }
@@ -80,62 +141,61 @@ const getNotifications = async (req, res) => {
 };
 
 const addInitialDetails = async (req, res) => {
-    try {
-        const { victimId } = req.body;
-        
-        if (!victimId) {
-            return res.status(400).json({ message: "Victim ID is required" });
-        }
+  try {
+    const { victimId } = req.body;
 
-        // Find the victim
-        const victim = await Victim.findOne({ victimId });
-        if (!victim) {
-            return res.status(404).json({ message: "Victim not found" });
-        }
-
-        if (victim.initialDetails && victim.initialDetails.addedAt) {
-            return res.status(400).json({ 
-                message: "Initial details already exist for this victim" 
-            });
-        }
-
-
-        const injuriesSustained = JSON.parse(req.body.injuriesSustained || '[]');
-        const physicalDisabilities = JSON.parse(req.body.physicalDisabilities || '[]');
-        const substanceAbuse = JSON.parse(req.body.substanceAbuse || '[]');
-        const initialDetails = {
-            injuriesSustained,
-            otherInjuries: req.body.otherInjuries || "",
-            physicalDisabilities,
-            otherDisabilities: req.body.otherDisabilities || "",
-            pregnancyStatus: req.body.pregnancyStatus || "",
-            stiStatus: req.body.stiStatus || "",
-            substanceAbuse,
-            otherSubstanceAbuse: req.body.otherSubstanceAbuse || "",
-            rescueAttempts: req.body.rescueAttempts || "",
-            rescueDetails: req.body.rescueDetails || "",
-            legalStatus: req.body.legalStatus || "",
-            photo: req.file ? req.file.filename : "",
-            addedAt: new Date()
-        };
-
-
-        victim.initialDetails = initialDetails;
-        await victim.save();
-
-        return res.status(200).json({ 
-            message: "Initial details added successfully",
-            victim: victim
-        });
-         } catch (err) {
-        return res.status(500).json({ message: err.message });
+    if (!victimId) {
+      return res.status(400).json({ message: "Victim ID is required" });
     }
-};
 
+    // Find the victim
+    const victim = await Victim.findOne({ victimId });
+    if (!victim) {
+      return res.status(404).json({ message: "Victim not found" });
+    }
+
+    if (victim.initialDetails && victim.initialDetails.addedAt) {
+      return res.status(400).json({
+        message: "Initial details already exist for this victim",
+      });
+    }
+
+    const injuriesSustained = JSON.parse(req.body.injuriesSustained || "[]");
+    const physicalDisabilities = JSON.parse(
+      req.body.physicalDisabilities || "[]"
+    );
+    const substanceAbuse = JSON.parse(req.body.substanceAbuse || "[]");
+    const initialDetails = {
+      injuriesSustained,
+      otherInjuries: req.body.otherInjuries || "",
+      physicalDisabilities,
+      otherDisabilities: req.body.otherDisabilities || "",
+      pregnancyStatus: req.body.pregnancyStatus || "",
+      stiStatus: req.body.stiStatus || "",
+      substanceAbuse,
+      otherSubstanceAbuse: req.body.otherSubstanceAbuse || "",
+      rescueAttempts: req.body.rescueAttempts || "",
+      rescueDetails: req.body.rescueDetails || "",
+      legalStatus: req.body.legalStatus || "",
+      photo: req.file ? req.file.filename : "",
+      addedAt: new Date(),
+    };
+
+    victim.initialDetails = initialDetails;
+    await victim.save();
+
+    return res.status(200).json({
+      message: "Initial details added successfully",
+      victim: victim,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
 async function getStaffAudits(req, res) {
   try {
-    const { staffId } = req.params;
+    const staffId = req.user.id;
     if (!staffId) return res.status(400).json({ message: "staffId required" });
 
     const staff = await Staff.findOne({ staffId });
@@ -143,14 +203,14 @@ async function getStaffAudits(req, res) {
 
     // Fetch audits submitted by this staff
     const audits = await Audit.find({ submittedBy: staff._id })
-      .populate({ path: 'victimId', select: 'fullName victimId' })
+      .populate({ path: "victimId", select: "fullName victimId" })
       .sort({ _id: -1 });
 
-    const mapped = audits.map(a => ({
+    const mapped = audits.map((a) => ({
       auditId: a.auditId,
       date: a.timestamp || a.createdAt,
       staffName: staff.fullName,
-      victimName: a.victimId?.fullName || 'Unknown'
+      victimName: a.victimId?.fullName || "Unknown",
     }));
 
     return res.status(200).json({ audits: mapped });
@@ -159,23 +219,34 @@ async function getStaffAudits(req, res) {
   }
 }
 
-async function getReleasedVictims(req,res){
-    try{
-        const {staffId}= req.params;
-        if(!staffId){
-            return res.status(400).json({ error: "staffId parameter is required" });
-        }
-        const staff = await Staff.find
-        ({ staffId });
-        if(!staff){
-            return res.status(404).json({ error: "Staff not found" });
-        }
-        const victims = await Victim.find({ staffId: staff._id, status: 'released' });
-        return res.status(200).json(victims);
-    } catch (error) {
-        console.error("Error retrieving released victims:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }   
+async function getReleasedVictims(req, res) {
+  try {
+    const staffId = req.user.id;
+    if (!staffId) {
+      return res.status(400).json({ error: "staffId parameter is required" });
+    }
+    const staff = await Staff.find({ staffId });
+    if (!staff) {
+      return res.status(404).json({ error: "Staff not found" });
+    }
+    const victims = await Victim.find({
+      staffId: staff._id,
+      status: "released",
+    });
+    return res.status(200).json(victims);
+  } catch (error) {
+    console.error("Error retrieving released victims:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 }
 
-module.exports = {getVictims, getVictimById, getStaffById, getNotifications, addInitialDetails,getReleasedVictims,getStaffAudits};
+module.exports = {
+  getMyVictims,
+  getVictims,
+  getVictimById,
+  getStaffById,
+  getNotifications,
+  addInitialDetails,
+  getReleasedVictims,
+  getStaffAudits,
+};

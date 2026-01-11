@@ -16,7 +16,6 @@ function StaffManagement() {
   const [selectedVictims, setSelectedVictims] = useState([]);
   const [unassignedVictims, setUnassignedVictims] = useState([]);
   const [currPage, setCurrPage] = useState(1);
-  const adminId = localStorage.getItem("id");
   const token = localStorage.getItem("token");
   const [staffData, setStaffData] = useState([]);
   const statuses = ["active", "inactive"];
@@ -27,7 +26,7 @@ function StaffManagement() {
   const fetchUnassignedVictims = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/get-unassigned-victims/${adminId}`,
+        `http://localhost:5000/admin/get-unassigned-victims`,
         {
           method: "GET",
           headers: {
@@ -49,7 +48,7 @@ function StaffManagement() {
   const fetchStaffDetails = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/view-staffs/${adminId}`,
+        `http://localhost:5000/admin/view-staffs`,
         {
           method: "GET",
           headers: {
@@ -71,10 +70,10 @@ function StaffManagement() {
 
   useEffect(() => {
     fetchStaffDetails();
-    fetchDistinctRoles(adminId, token, setRoles);
-    fetchCentreDetails(adminId, token, setCentres);
+    fetchDistinctRoles(token, setRoles);
+    fetchCentreDetails(token, setCentres);
     fetchUnassignedVictims();
-  }, [adminId, token]);
+  }, [token]);
 
   const deleteVictim = (nameToDelete) =>
     setSelectedVictims((currentVictims) =>
@@ -182,7 +181,7 @@ function StaffManagement() {
     }
     try {
       const res = await fetch(
-        `http://localhost:5000/admin/assign-victims/${adminId}`,
+        `http://localhost:5000/admin/assign-victims`,
         {
           method: "PATCH",
           headers: {
@@ -215,7 +214,7 @@ function StaffManagement() {
   const [staffModal, setStaffModal] = useState(false);
   return (
     <>
-      <main className="w-full min-h-screen bg-stone-100 flex flex-col items-start font-['QuickSand']">
+      <main className="w-full min-h-screen bg-stone-200 flex flex-col items-start font-['QuickSand']">
         <AdminNavbar />
         <div className="w-full p-6 flex-col items-center gap-6">
           <div className="w-full flex flex-col gap-2">

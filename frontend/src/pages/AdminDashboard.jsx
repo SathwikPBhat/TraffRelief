@@ -25,11 +25,10 @@ function AdminDashboard() {
         deceased:0
     });
     const token = localStorage.getItem("token");
-    const id = localStorage.getItem("id");
 
     const getActivityData = async() =>{
         try{
-           const res =  await fetch(`http://localhost:5000/admin/get-activity-details/${id}`,{
+           const res =  await fetch(`http://localhost:5000/admin/get-activity-details`,{
             method: "GET",
             headers:{
                 Authorization: `Bearer ${token}`
@@ -51,7 +50,7 @@ function AdminDashboard() {
     }
     const getVictimDetails = async() =>{
         try{
-            const res = await fetch(`http://localhost:5000/stats/victim-details/${id}`,{
+            const res = await fetch(`http://localhost:5000/stats/victim-details`,{
                 method:"GET",
                 headers:{
                     'Authorization':`Bearer ${token}`
@@ -78,7 +77,7 @@ function AdminDashboard() {
 }
     const getCentreDetails = async() =>{
         try{
-            const res = await fetch(`http://localhost:5000/stats/centre-details/${id}`,{
+            const res = await fetch(`http://localhost:5000/stats/centre-details`,{
                 method:"GET",
                 headers:{
                     'Authorization':`Bearer ${token}`,
@@ -87,9 +86,7 @@ function AdminDashboard() {
             })
             const data = await res.json();
             if(res.status == 200){
-                console.log(data)
                 const centre = {total : data.centresUnderAdminCount, withStaff:data.centresWithStaffCount};
-                console.log(centre);
                 setCentreData(centre);
             }
             else{
@@ -102,7 +99,7 @@ function AdminDashboard() {
     }
     const getStaffDetails = async() =>{
         try{
-            const res = await fetch(`http://localhost:5000/stats/staff-details/${id}`,{
+            const res = await fetch(`http://localhost:5000/stats/staff-details`,{
                 method:"GET",
                 headers:{
                     'Authorization':`Bearer ${token}`,
@@ -111,9 +108,7 @@ function AdminDashboard() {
             })
             const data = await res.json();
             if(res.status == 200){
-                console.log(data)
                 const staff = {total : data.total, working:data.working};
-                console.log(staff);
                 setStaffData(staff);
             }
             else{
@@ -129,7 +124,7 @@ function AdminDashboard() {
         getStaffDetails();
         getActivityData();
         getVictimDetails();
-    },[token, id])
+    },[token])
 
   return (
     <main className="w-full min-h-screen font-['QuickSand'] bg-stone-100">

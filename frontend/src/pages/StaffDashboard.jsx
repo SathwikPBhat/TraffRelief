@@ -10,14 +10,12 @@ import { useNavigate } from "react-router-dom";
 function StaffDashboard() {
   const [victimData, setVictimData] = useState([]);
   const [pendingAudits, setPendingAudits] = useState([]);
-
-  const id = localStorage.getItem("id");
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
 
   const getVictims = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/staff/get-victims/${id}`, {
+      const res = await fetch(`http://localhost:5000/staff/get-my-victims`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -44,7 +42,7 @@ function StaffDashboard() {
   const getPendingAudits = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/staff/${id}/pending-audits`,
+        `http://localhost:5000/staff/pending-audits`,
         {
           method: "GET",
           headers: {
@@ -78,7 +76,7 @@ function StaffDashboard() {
   useEffect(() => {
     getVictims();
     getPendingAudits();
-  }, [token, id]);
+  }, [token]);
 
   return (
     <main className="w-full min-h-screen bg-stone-100 font-['QuickSand'] flex flex-col">
@@ -110,6 +108,7 @@ function StaffDashboard() {
           <AuditTable
             tableHeaders={["Due Date", "Audit ID", "Victim ID", "Action"]}
             tableData={pendingAudits}
+            onView={(row) => navigate(`/audit/${row.victimId}`)}
           />
         </div>
       </div>

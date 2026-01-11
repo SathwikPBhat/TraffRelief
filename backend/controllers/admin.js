@@ -9,7 +9,7 @@ const Audit = require("../models/audit.js");
 
 const viewStaffs = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required" });
     }
@@ -30,7 +30,8 @@ const viewStaffs = async (req, res) => {
 
 const handleAddStaff = async (req, res) => {
   try {
-    const { id, fullName, email, phoneNumber, password, role, center } =
+    const id = req.user.id;
+    const {fullName, email, phoneNumber, password, role, center } =
       req.body;
     if (!id) {
       return res.status(401).json({ message: "Forbidden" });
@@ -99,7 +100,7 @@ const handleAddStaff = async (req, res) => {
 
 const getActivityLogs = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required" });
     }
@@ -120,7 +121,7 @@ const getActivityLogs = async (req, res) => {
 
 const markAllNotificationsRead = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     if (!adminId)
       return res.status(400).json({ message: "Admin id is required" });
 
@@ -139,7 +140,7 @@ const markAllNotificationsRead = async (req, res) => {
 
 const getVictimDetails = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required" });
     }
@@ -182,7 +183,7 @@ const addVictim = async (req, res) => {
     console.log("req.body:", req.body);
     console.log("req.file:", req.file);
 
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const admin = await Admin.findOne({ adminId });
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
@@ -195,20 +196,14 @@ const addVictim = async (req, res) => {
       traffickingType,
       locations,
       duration,
-      centre,
       languagesSpoken,
       controlMethods,
     } = req.body;
 
-    if (!fullName || !age || !gender || !traffickingType || !centre) {
+    if (!fullName || !age || !gender || !traffickingType) {
       return res.status(400).json({
         message: "All fields are required",
       });
-    }
-
-    const centreDoc = await Centre.findOne({ centreName: centre });
-    if (!centreDoc) {
-      return res.status(404).json({ message: "Centre not found" });
     }
 
     let parsedLanguages = [];
@@ -240,7 +235,6 @@ const addVictim = async (req, res) => {
       age,
       gender,
       languagesSpoken: parsedLanguages,
-      centre: centreDoc._id,
       admin: admin._id,
       caseDetailsForAdmin: {
         traffickingType,
@@ -254,7 +248,7 @@ const addVictim = async (req, res) => {
       adminId: admin._id,
       victimId: newVictim._id,
       activity: "New Victim created",
-      description: `Victim (${newVictim.fullName}) added to centre ${centreDoc.centreName}`,
+      description: `Victim (${newVictim.fullName}) added `,
       readStatus: false,
     });
 
@@ -271,7 +265,7 @@ const addVictim = async (req, res) => {
 
 const getUnassignedVictims = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID is required" });
     }
@@ -295,7 +289,7 @@ const getUnassignedVictims = async (req, res) => {
 
 const assignVictims = async (req, res) => {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const { staffId, victimIds } = req.body;
     if (!staffId || !Array.isArray(victimIds) || victimIds.length === 0)
       return res.status(400).json({ message: "staffId & victimIds required" });
@@ -323,7 +317,7 @@ const assignVictims = async (req, res) => {
     }
     const result = await Victim.updateMany(
       { victimId: { $in: victimIds } },
-      { $set: { staff: staff._id, status: "active" } }
+      { $set: { staff: staff._id, status: "active" , centre: staff.centre} }
     );
     await ActivityLog.create({
       adminId: (await Admin.findOne({ adminId }))._id,
@@ -363,7 +357,7 @@ async function getAllAudits(req, res) {
 
 async function getAdminDetails(req, res) {
   try {
-    const { adminId } = req.params;
+    const adminId = req.user.id;
     const admin = await Admin.findOne({ adminId });
 
     if (!admin) {
@@ -373,6 +367,32 @@ async function getAdminDetails(req, res) {
     return res.status(200).json(admin);
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+}
+
+async function getStaffAudits(req, res) {
+  try {
+    const {staffId} = req.params;
+    if (!staffId) return res.status(400).json({ message: "staffId required" });
+
+    const staff = await Staff.findOne({ staffId });
+    if (!staff) return res.status(404).json({ message: "Staff not found" });
+
+    // Fetch audits submitted by this staff
+    const audits = await Audit.find({ submittedBy: staff._id })
+      .populate({ path: "victimId", select: "fullName victimId" })
+      .sort({ _id: -1 });
+
+    const mapped = audits.map((a) => ({
+      auditId: a.auditId,
+      date: a.timestamp || a.createdAt,
+      staffName: staff.fullName,
+      victimName: a.victimId?.fullName || "Unknown",
+    }));
+
+    return res.status(200).json({ audits: mapped });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
   }
 }
 
@@ -388,4 +408,5 @@ module.exports = {
   assignVictims,
   getAllAudits,
   getAdminDetails,
+  getStaffAudits
 };
