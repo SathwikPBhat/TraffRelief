@@ -396,6 +396,48 @@ async function getStaffAudits(req, res) {
   }
 }
 
+async function releaseVictim(req, res){
+  try{
+    const {victimId} = req.params;
+    const adminId = req.user.id;
+    if(!adminId){
+      return res.status(400).json({message: "AdminId is required"});
+    }
+    const admin = await Admin.findOne({adminId});
+    if(!admin){
+      return res.status(404).json({message: "Admin not found"})
+    }
+    const victim = await Victim.findOne({victimId});
+    if(!victim){
+      return res.status(404).json({message: "Victim not found"})
+    }
+    if (victim.admin.toString() !== admin._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized to release this victim" });
+    }
+    if (victim.status === "released") {
+      return res.status(400).json({ message: "Victim is already released" });
+    }
+    victim.status = "released";
+    await victim.save();
+
+    await ActivityLog.create({
+      adminId: admin._id,
+      victimId: victim._id,
+      activity: "Victim Released",
+      description: `Victim ${victim.fullName} (${victim.victimId}) has been released`,
+      readStatus: false,
+    });
+
+    return res.status(200).json({ 
+      message: "Victim released successfully",
+      victim 
+    });
+  } 
+
+  catch(err){
+    return res.status(500).json({ message: err.message });
+  }
+}
 
 module.exports = {
   handleAddStaff,
@@ -408,5 +450,6 @@ module.exports = {
   assignVictims,
   getAllAudits,
   getAdminDetails,
-  getStaffAudits
+  getStaffAudits,
+  releaseVictim
 };

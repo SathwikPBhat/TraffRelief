@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const {handleAddStaff, viewStaffs, getActivityLogs, markAllNotificationsRead, getVictimDetails, addVictim, getUnassignedVictims, assignVictims,getAllAudits, getAdminDetails, getStaffAudits} = require('../controllers/admin.js');
-const { getAuditDetails } = require('../controllers/audit.js');
+const {handleAddStaff, viewStaffs, getActivityLogs, markAllNotificationsRead, getVictimDetails, addVictim, getUnassignedVictims, assignVictims,getAllAudits, getAdminDetails, getStaffAudits, releaseVictim} = require('../controllers/admin.js');
+const { getAuditDetails, getVictimAuditHistory } = require('../controllers/audit.js');
 const { verifyToken } = require('../middlewares/authentication.js');
 const upload = require('../middlewares/upload');
 
@@ -16,5 +16,7 @@ router.get('/get-all-audits', verifyToken, getAllAudits);
 router.get('/profile', verifyToken, getAdminDetails);
 router.get('/audit-summary/:auditId', verifyToken, getAuditDetails);
 router.get('/get-staff-audits/:staffId', verifyToken, getStaffAudits);
+router.get('/:victimId/audit-history', verifyToken, getVictimAuditHistory);
+router.patch('/release-victim/:victimId', verifyToken, releaseVictim);
 
 module.exports = router;

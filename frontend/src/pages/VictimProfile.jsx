@@ -19,7 +19,7 @@ function VictimProfile() {
   const [auditData, setAuditData] = useState([]);
   const [showInitModal, setShowInitModal] = useState(false);
   const [loadingAudits, setLoadingAudits] = useState(true);
-
+  const [releasing, setReleasing] = useState(false);
 
   const getVictimData = async () => {
     try {
@@ -60,6 +60,36 @@ function VictimProfile() {
     }
   };
 
+  const handleReleaseVictim = async () => {
+  const confirmed = window.confirm(
+    `Are you sure you want to release ${victimData.fullName}? This action cannot be undone.`
+  );
+  
+  if (!confirmed) return;
+
+  setReleasing(true);
+  try {
+    const res = await fetch(
+      `http://localhost:5000/admin/release-victim/${victimId}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    const data = await res.json();
+    
+    if (res.ok) {
+      toast.success("Victim released successfully");
+      getVictimData(); 
+    } else {
+      toast.error(data.message || "Failed to release victim");
+    }
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setReleasing(false);
+  }
+}
   useEffect(() => {
     if (token && victimId) {
       getVictimData();
@@ -93,6 +123,7 @@ function VictimProfile() {
       <div className={`w-full p-8 ${showInitModal ? "blur-sm pointer-events-none select-none" : ""}`}>
         <div className="w-full flex items-center justify-center text-teal-700 lg:text-3xl md:text-3xl text-xl font-semibold mb-14">
           {victimData.fullName}
+          
         </div>
 
         <div className="w-full grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 grid-cols-1 lg:gap-4 md:gap-4 gap-12">
@@ -175,16 +206,25 @@ function VictimProfile() {
           </div>
         )}
 
-        {isActive && userData.role !== "admin" && hasInitialDetails && (
-          <div className="w-full flex justify-end mt-5">
-            <button
-              onClick={() => navigate(`/audit/${victimId}`)}
-              className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
-            >
-              Add Audit
-            </button>
-          </div>
-        )}
+  <div className="w-full flex justify-end mt-5 gap-3"> 
+        <button
+      onClick={() => navigate(`/victim-progress/${victimId}`)} 
+      className="rounded-xl bg-amber-600 text-white px-6 py-2 hover:bg-amber-700 transition-colors font-medium shadow-md"
+    >
+      View Progress Charts
+    </button>
+{isActive && userData.role !== "admin" && hasInitialDetails && (
+
+
+    <button
+      onClick={() => navigate(`/audit/${victimId}`)}
+      className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
+    >
+      Add Audit
+    </button>
+  
+)}
+</div>
 
         <div className="mt-14 relative">
           <div className="absolute -top-8.5 left-4 rounded-t-xl pt-1 px-6 border border-teal-600 bg-stone-100 text-gray-500 text-lg">
@@ -203,7 +243,18 @@ function VictimProfile() {
           )}
         </div>
       </div>
-
+      
+       {userData.role === "admin" && isActive && (
+          <div className="w-full flex justify-end mt-6">
+            <button
+              onClick={handleReleaseVictim}
+              disabled={releasing}
+              className="rounded-xl bg-red-600 text-white px-6 py-2.5 hover:bg-red-700 transition-colors font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {releasing ? "Releasing..." : "Release Victim"}
+            </button>
+          </div>
+        )}
       {showInitModal && victimData && (
         <InitialDetailsModal
           victims={[{ victimId: victimData.victimId, fullName: victimData.fullName }]}

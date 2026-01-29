@@ -2,7 +2,7 @@ const Audit = require("../models/audit");
 const Staff = require("../models/staff");
 const Victim = require("../models/victim");
 const ActivityLog = require("../models/activityLog");
-
+const Admin = require("../models/admin");
 
 async function addAudit(req, res, next) {
   try {
@@ -102,83 +102,22 @@ async function addAudit(req, res, next) {
     console.error("Error adding audit:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-
-}
-/*
-async function addAudit(req,res){
-    try{
-        const {staffId,victimId} = req.params;
-        if(!staffId||!victimId){
-            return res.status(400).json({ error: "staffId and victimId parameters are required" });
-        }
-        let newAuditId = "AUD-101";
-    const lastAudit = await Audit.findOne().sort({ createdAt: -1 });
-
-    if (lastAudit && lastAudit.auditId) {
-      const lastNum = parseInt(lastAudit.auditId.split("-")[1]);
-      newAuditId = `AUD-${lastNum + 1}`;
-    }
-   
-        const staff= await Staff.findOne({staffId:staffId});
-        if(!staff){
-            return res.status(404).json({ error: "Staff not found" });
-        }
-
-        const victim= await Victim.findOne({victimId});
-        if(!victim){
-            return res.status(404).json({ error: "Victim not found" });
-        }
-
-        req.body.submittedBy = staff._id;
-        req.body.victimId = victim._id;
-        req.body.auditId = newAuditId;
-        req.body.result=null;
-        const getAudit=req.body;
-
-
-       if(!getAudit){
-            return res.status(400).json({ error: "Audit data is required" });
-       }
-        
-        const allAudits=await Audit.find({ victimId: victimId });
-        if(allAudits.length===0){
-            req.body.isFirst=true;
-        }else{
-            req.body.isFirst=false;
-        }
-        
-        const newAudit = new Audit(req.body);
-        await newAudit.save();
-        await ActivityLog.create({
-      staffId: staff._id,
-      adminId: victim.admin || null,
-      activity: "Audit Submitted",
-      description: `Audit ${newAudit.auditId} submitted by ${staff.fullName} for victim ${victim.fullName} (${victim.victimId})`,
-      timestamp: new Date(),
-      readStatus: false,
-    });
-        res.status(201).json(newAudit);
-    } catch (error) {
-        console.error("Error adding audit:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
 }
 
-*/
-async function getPendingAudits(req,res){
-    try {
-        const staffId = req.user.id;
-        if(!staffId) return res.status(400).json({ error: "staffId parameter is required" });
+async function getPendingAudits(req, res) {
+  try {
+    const staffId = req.user.id;
+    if (!staffId)
+      return res.status(400).json({ error: "staffId parameter is required" });
 
+    const staff = await Staff.findOne({ staffId });
+    if (!staff) return res.status(404).json({ error: "Staff not found" });
 
-        const staff = await Staff.findOne({ staffId });
-        if(!staff) return res.status(404).json({ error: "Staff not found" });
+    const now = new Date();
 
-        const now = new Date();
-
-        const auditsWithField = await Audit.find({
-            'result.next_audit_date': { $exists: true, $ne: null }
-        }).populate('victimId', 'victimId _id status isActive');
+    const auditsWithField = await Audit.find({
+      "result.next_audit_date": { $exists: true, $ne: null },
+    }).populate("victimId", "victimId _id status isActive");
 
     const pending = auditsWithField.filter((a) => {
       const raw = a.result?.next_audit_date;
@@ -189,35 +128,43 @@ async function getPendingAudits(req,res){
       const v = a.victimId;
       if (!v) return false;
       const activeByFlag = v.isActive !== false;
-      const activeByStatus = v.status ? v.status.toLowerCase() !== "released" : true;
+      const activeByStatus = v.status
+        ? v.status.toLowerCase() !== "released"
+        : true;
       return activeByFlag && activeByStatus;
     });
-       
-        return res.status(200).json(pending);
-    } catch (error) {
-        console.error("Error retrieving pending audits:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-}
 
+    return res.status(200).json(pending);
+  } catch (error) {
+    console.error("Error retrieving pending audits:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 async function getAuditsByVictimId(req, res) {
   try {
     const { victimId } = req.params;
-    if (!victimId) return res.status(400).json({ error: "victimId parameter is required" });
+    if (!victimId)
+      return res.status(400).json({ error: "victimId parameter is required" });
 
-    const victim = await Victim.findOne({ victimId }).select('_id');
+    const victim = await Victim.findOne({ victimId }).select("_id");
     if (!victim) return res.status(404).json({ error: "Victim not found" });
 
     const audits = await Audit.find({ victimId: victim._id })
-      .populate({ path: 'submittedBy', model: 'Staff', select: 'fullName staffId' })
+      .populate({
+        path: "submittedBy",
+        model: "Staff",
+        select: "fullName staffId",
+      })
       .sort({ _id: -1 })
       .lean();
 
-    const list = audits.map(a => ({
+    const list = audits.map((a) => ({
       auditId: a.auditId,
       date: a.timestamp || a.createdAt || null,
-      staffName: (a.submittedBy && (a.submittedBy.fullName || a.submittedBy.staffId)) || 'Unknown'
+      staffName:
+        (a.submittedBy && (a.submittedBy.fullName || a.submittedBy.staffId)) ||
+        "Unknown",
     }));
 
     return res.status(200).json({ audits: list });
@@ -277,12 +224,81 @@ async function getAllAudits(req, res) {
   }
 }
 
+
+async function getVictimAuditHistory(req, res) {
+  try {
+    const { victimId } = req.params;
+    const { role, id } = req.user;
+
+    if (!victimId) {
+      return res.status(400).json({ error: "victimId is required" });
+    }
+
+    const victim = await Victim.findOne({ victimId });
+    if (!victim) {
+      return res.status(404).json({ error: "Victim not found" });
+    }
+
+    if (role === "staff") {
+      const staff = await Staff.findOne({ staffId: id });
+      if (!staff) {
+        return res.status(404).json({ error: "Staff not found" });
+      }
+      const isAssigned = victim.staff?.toString() === staff._id.toString();
+      if (!isAssigned) {
+        return res
+          .status(403)
+          .json({ error: "You can only view your assigned victims" });
+      }
+    }
+
+    if (role === "admin") {
+      const admin = await Admin.findOne({ adminId: id });
+      if (!admin) {
+        return res.status(404).json({ error: "Admin not found" });
+      }
+
+      if (victim.admin?.toString() !== admin._id.toString()) {
+        return res
+          .status(403)
+          .json({ error: "Victim not under your management" });
+      }
+    }
+
+    const audits = await Audit.find({ victimId: victim._id })
+      .sort({ timestamp: 1 }) 
+      .select(
+        "auditId timestamp " +
+          "nutritionalStatus " + 
+          "selfHarmBehaviors " + 
+          "therapyAttendanceRate treatmentCompliance goalAchievementProgress " +
+          "trustAndRelationshipIssues emotionalRegulationChallenges " +
+          "behavioralImprovements skillDevelopmentMilestones " +
+          "setbacksIndicator medicationAdherence " +
+          "currentPhysicalSymptoms physicalInjuriesSustained " +
+          "traumaIndicators depressionSymptoms anxietyIndicators " +
+          "result",
+      )
+      .lean();
+
+    return res.status(200).json({
+      victimId: victim.victimId,
+      victimName: victim.fullName,
+      audits,
+    });
+  } catch (error) {
+    console.error("Error retrieving victim audit history:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
-    addAudit,
-    getAuditsByVictimId,
-    getAllAudits,
-    getAuditDetails,
-    getAuditByStaff,
-    getPendingAudits,
-    getAuditsByVictimId
+  addAudit,
+  getAuditsByVictimId,
+  getAllAudits,
+  getAuditDetails,
+  getAuditByStaff,
+  getPendingAudits,
+  getAuditsByVictimId,
+  getVictimAuditHistory,
 };

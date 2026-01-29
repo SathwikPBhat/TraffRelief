@@ -7,7 +7,7 @@ const Audit = require('../models/audit');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
-const model = genAI ? genAI.getGenerativeModel({ model: "gemini-2.0-flash" }) : null;
+const model = genAI ? genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite"}) : null;
 const systemInstruction = `You are a clinical-assessment assistant. Your task is to compare two audit records (a previousAudit and a currentAudit) for a trafficking-victim rehabilitation case and produce a single machine-readable JSON object that exactly follows the result schema described below.
 Hard requirements (must follow exactly):
 Output only valid JSON — nothing else (no explanatory text, no markdown, no trailing commas). The top-level object must match the result schema below exactly (field names, nested structure, types).

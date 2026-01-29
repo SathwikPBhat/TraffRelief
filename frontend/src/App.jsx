@@ -20,14 +20,13 @@ import VictimManagementForStaff from "./pages/VictimManagementForStaff";
 import VictimProfile from "./pages/VictimProfile";
 import ViewReleasesByVictim from "./pages/ViewReleasesByVictim";
 import Analytics from "./pages/Analytics";
+import VictimProgressCharts from "./pages/VictimProgressCharts"
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
-    
-
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route
@@ -62,11 +61,14 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route path = "/admin/analytics" element ={
-          <PrivateRoute>
-            <Analytics/>
-          </PrivateRoute>
-        }/>
+        <Route
+          path="/admin/analytics"
+          element={
+            <PrivateRoute>
+              <Analytics />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="/staff/victim-details"
           element={
@@ -111,7 +113,7 @@ function App() {
           path="/admin/audit-list"
           element={
             <PrivateRoute>
-              <AuditList/>
+              <AuditList />
             </PrivateRoute>
           }
         />
@@ -119,7 +121,7 @@ function App() {
           path="/staff/audit-list"
           element={
             <PrivateRoute>
-              <AuditList/>
+              <AuditList />
             </PrivateRoute>
           }
         />
@@ -127,19 +129,12 @@ function App() {
           path="/audit-summary/:auditId"
           element={
             <PrivateRoute>
-              <AuditSummary/>
+              <AuditSummary />
             </PrivateRoute>
           }
         />
 
-        <Route
-          path="/victim/:hashId"
-          element={
-            
-              <AudioInterviewPage />
-            
-          }
-        />
+        <Route path="/victim/:hashId" element={<AudioInterviewPage />} />
         <Route
           path="/staff/:staffId/pending-audits"
           element={
@@ -148,8 +143,15 @@ function App() {
             </PrivateRoute>
           }
         />
-
-       <Route
+        <Route
+          path="/victim-progress/:victimId"
+          element={
+            <PrivateRoute>
+              <VictimProgressCharts />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/staff/:staffId/released-victims"
           element={
             <PrivateRoute>
@@ -158,14 +160,19 @@ function App() {
           }
         />
 
-        <Route path="/view-releases/:staffId/:victimId" element={
-          <PrivateRoute>
-          <ViewReleasesByVictim />
-          </PrivateRoute>}
-          />
-   <Route path="/interview-results/:hashId" element={<InterviewResultsPage />} />
-        <Route path="*" element={<PageNotFound />
-      } />
+        <Route
+          path="/view-releases/:staffId/:victimId"
+          element={
+            <PrivateRoute>
+              <ViewReleasesByVictim />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/interview-results/:hashId"
+          element={<InterviewResultsPage />}
+        />
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </>
   );
