@@ -286,7 +286,7 @@ function AdminNavbar() {
                     }`}
                   >
                     <div className="text-xs text-slate-500">
-                      {formatTs(n.timestamp)}
+                      {formatTs(n.createdAt)}
                     </div>
                     <div
                       className={`text-sm font-semibold mt-0.5 ${

@@ -77,6 +77,7 @@ export const getVictims = async (staffId, token, setVictimData) => {
       setVictimData(
         data.victims.map((v) => ({
           fullName: v.fullName,
+          photo: v.photo,
           victimId: v.victimId,
           status: v.status,
           gender: v.gender,

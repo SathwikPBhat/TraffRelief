@@ -23,9 +23,12 @@ function VictimProfile() {
 
   const getVictimData = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/staff/get-victim/${victimId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `http://localhost:5000/staff/get-victim/${victimId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await res.json();
       if (res.ok) {
         setVictimData(data.victim);
@@ -39,15 +42,18 @@ function VictimProfile() {
 
   const getVictimAudits = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/staff/victim/${victimId}/audits`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `http://localhost:5000/staff/victim/${victimId}/audits`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await res.json();
       if (res.ok) {
-        const rows = (data.audits || []).map(a => ({
+        const rows = (data.audits || []).map((a) => ({
           date: a.date ? new Date(a.date).toLocaleDateString() : "N/A",
-          id: a.auditId,                  // used for navigation
-          staffName: a.staffName || "Unknown"
+          id: a.auditId, // used for navigation
+          staffName: a.staffName || "Unknown",
         }));
         setAuditData(rows);
       } else {
@@ -61,35 +67,35 @@ function VictimProfile() {
   };
 
   const handleReleaseVictim = async () => {
-  const confirmed = window.confirm(
-    `Are you sure you want to release ${victimData.fullName}? This action cannot be undone.`
-  );
-  
-  if (!confirmed) return;
-
-  setReleasing(true);
-  try {
-    const res = await fetch(
-      `http://localhost:5000/admin/release-victim/${victimId}`,
-      {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` }
-      }
+    const confirmed = window.confirm(
+      `Are you sure you want to release ${victimData.fullName}? This action cannot be undone.`,
     );
-    const data = await res.json();
-    
-    if (res.ok) {
-      toast.success("Victim released successfully");
-      getVictimData(); 
-    } else {
-      toast.error(data.message || "Failed to release victim");
+
+    if (!confirmed) return;
+
+    setReleasing(true);
+    try {
+      const res = await fetch(
+        `http://localhost:5000/admin/release-victim/${victimId}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Victim released successfully");
+        getVictimData();
+      } else {
+        toast.error(data.message || "Failed to release victim");
+      }
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setReleasing(false);
     }
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setReleasing(false);
-  }
-}
+  };
   useEffect(() => {
     if (token && victimId) {
       getVictimData();
@@ -114,16 +120,22 @@ function VictimProfile() {
   }
 
   const isActive = victimData.status === "active";
+  const verificationStatus =
+    victimData?.initialDetails?.verificationStatus || "none";
+  const isVerified = verificationStatus === "verified";
+  const isRejected = verificationStatus === "rejected";
+  const isPending = verificationStatus === "pending";
   const hasInitialDetails = Boolean(victimData?.initialDetails?.addedAt);
 
   return (
     <main className="w-full min-h-screen bg-stone-100 font-['QuickSand'] flex flex-col">
       {userData.role === "admin" ? <AdminNavbar /> : <StaffNavbar />}
 
-      <div className={`w-full p-8 ${showInitModal ? "blur-sm pointer-events-none select-none" : ""}`}>
+      <div
+        className={`w-full p-8 ${showInitModal ? "blur-sm pointer-events-none select-none" : ""}`}
+      >
         <div className="w-full flex items-center justify-center text-teal-700 lg:text-3xl md:text-3xl text-xl font-semibold mb-14">
           {victimData.fullName}
-          
         </div>
 
         <div className="w-full grid lg:grid-cols-2 md:grid-cols-2 sm:grid-cols-2 grid-cols-1 lg:gap-4 md:gap-4 gap-12">
@@ -132,7 +144,7 @@ function VictimProfile() {
               Personal info
             </div>
             <img
-              src={golimaams}
+              src={victimData.photo || golimaams}
               alt="victim"
               className="lg:size-25 md:size-25 sm:size-15 size-10 rounded-lg"
             />
@@ -140,10 +152,18 @@ function VictimProfile() {
               <p>Full Name: {victimData.fullName}</p>
               <p>Age: {victimData.age}</p>
               <p>
-                Gender: {victimData.gender === "M" ? "Male" : victimData.gender === "F" ? "Female" : "Other"}
+                Gender:{" "}
+                {victimData.gender === "M"
+                  ? "Male"
+                  : victimData.gender === "F"
+                    ? "Female"
+                    : "Other"}
               </p>
               <p>
-                Centre: <span className="text-teal-700 font-medium">{victimData.centre?.centreName || "N/A"}</span>
+                Centre:{" "}
+                <span className="text-teal-700 font-medium">
+                  {victimData.centre?.centreName || "N/A"}
+                </span>
               </p>
             </div>
           </div>
@@ -162,13 +182,16 @@ function VictimProfile() {
               <p>
                 Methods Of Controlling:{" "}
                 <span className="text-teal-700 font-medium">
-                  {victimData.caseDetailsForAdmin?.controlMethods?.join(", ") || "N/A"}
+                  {victimData.caseDetailsForAdmin?.controlMethods?.join(", ") ||
+                    "N/A"}
                 </span>
               </p>
               <p>
                 Geographic Locations:{" "}
                 <span className="text-teal-700 font-medium">
-                  {victimData.caseDetailsForAdmin?.traffickingLocations?.join(", ") || "N/A"}
+                  {victimData.caseDetailsForAdmin?.traffickingLocations?.join(
+                    ", ",
+                  ) || "N/A"}
                 </span>
               </p>
               <p>
@@ -195,36 +218,51 @@ function VictimProfile() {
           </div>
         )}
 
-        {isActive && userData.role !== "admin" && !hasInitialDetails && (
-          <div className="w-full flex justify-end mt-5">
-            <button
-              onClick={() => setShowInitModal(true)}
-              className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
-            >
-              Add Initial Data
-            </button>
-          </div>
-        )}
+        {isActive &&
+          userData.role !== "admin" &&
+          !isVerified &&
+          (isRejected || !victimData?.initialDetails) && (
+            <div className="w-full flex justify-end mt-5 gap-3">
+              <button
+                onClick={() => setShowInitModal(true)}
+                className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
+              >
+                Add Initial Data
+              </button>
+            </div>
+          )}
+        {isActive &&
+          userData.role === "admin" &&
+          victimData?.initialDetails?.verificationStatus === "pending" && (
+            <div className="w-full flex justify-end mt-5">
+              <button
+                onClick={() => navigate(`/victim-verify/${victimId}`)}
+                className="rounded-xl bg-indigo-600 text-white px-6 py-2 hover:bg-indigo-700 transition-colors font-medium shadow-md"
+              >
+                Verify Initial Details
+              </button>
+            </div>
+          )}
 
-  <div className="w-full flex justify-end mt-5 gap-3"> 
-        <button
-      onClick={() => navigate(`/victim-progress/${victimId}`)} 
-      className="rounded-xl bg-amber-600 text-white px-6 py-2 hover:bg-amber-700 transition-colors font-medium shadow-md"
-    >
-      View Progress Charts
-    </button>
-{isActive && userData.role !== "admin" && hasInitialDetails && (
+        <div className="w-full flex justify-end mt-5 gap-3">
 
-
-    <button
-      onClick={() => navigate(`/audit/${victimId}`)}
-      className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
-    >
-      Add Audit
-    </button>
-  
-)}
-</div>
+          {isActive && userData.role !== "admin" && isVerified && (
+            <div className="w-full flex justify-end mt-5 gap-3">
+              <button
+                onClick={() => navigate(`/victim-progress/${victimId}`)}
+                className="rounded-xl bg-amber-600 text-white px-6 py-2 hover:bg-amber-700 transition-colors font-medium shadow-md"
+              >
+                View Progress Charts
+              </button>
+              <button
+                onClick={() => navigate(`/audit/${victimId}`)}
+                className="rounded-xl bg-teal-600 text-white px-6 py-2 hover:bg-teal-700 transition-colors font-medium shadow-md"
+              >
+                Add Audit
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="mt-14 relative">
           <div className="absolute -top-8.5 left-4 rounded-t-xl pt-1 px-6 border border-teal-600 bg-stone-100 text-gray-500 text-lg">
@@ -243,21 +281,23 @@ function VictimProfile() {
           )}
         </div>
       </div>
-      
-       {userData.role === "admin" && isActive && (
-          <div className="w-full flex justify-end mt-6">
-            <button
-              onClick={handleReleaseVictim}
-              disabled={releasing}
-              className="rounded-xl bg-red-600 text-white px-6 py-2.5 hover:bg-red-700 transition-colors font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {releasing ? "Releasing..." : "Release Victim"}
-            </button>
-          </div>
-        )}
+
+      {userData.role === "admin" && isActive && (
+        <div className="w-full flex justify-end mt-6">
+          <button
+            onClick={handleReleaseVictim}
+            disabled={releasing}
+            className="rounded-xl bg-red-600 text-white px-6 py-2.5 hover:bg-red-700 transition-colors font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {releasing ? "Releasing..." : "Release Victim"}
+          </button>
+        </div>
+      )}
       {showInitModal && victimData && (
         <InitialDetailsModal
-          victims={[{ victimId: victimData.victimId, fullName: victimData.fullName }]}
+          victims={[
+            { victimId: victimData.victimId, fullName: victimData.fullName },
+          ]}
           onClose={() => {
             setShowInitModal(false);
             getVictimData();

@@ -9,10 +9,6 @@ const activityLogSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Staff"
     },
-    timestamp:{
-        type: Date,
-        default: Date.now()
-    },
     activity:{
         type: String,
         required: true

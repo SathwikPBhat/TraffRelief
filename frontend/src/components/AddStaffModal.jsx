@@ -47,13 +47,22 @@ function AddStaffModal({showModal}) {
         e.preventDefault();
         setLoading(true);
         try{
+            const formDataToSend = new FormData();
+            formDataToSend.append('fullName', formData.fullName);
+            formDataToSend.append('email', formData.email);
+            formDataToSend.append('phoneNumber', formData.phoneNumber);
+            formDataToSend.append('password', formData.password);
+            formDataToSend.append('center', formData.center);
+            formDataToSend.append('role', formData.role);
+            if (formData.file) {
+                formDataToSend.append('photo', formData.file);
+            }
            const res =  await fetch('http://localhost:5000/admin/add-staff',{
                 method:'POST',
                 headers:{
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type':'application/json'
                 },
-                body:JSON.stringify(formData)
+                body: formDataToSend
             });
 
             const data = await res.json();
@@ -147,10 +156,11 @@ function AddStaffModal({showModal}) {
                     </div>
                     {/* File */}
                     <div className='flex flex-col gap-2 mb-4 lg:col-span-2'>
-                        <label htmlFor="file">Upload File</label>
+                        <label htmlFor="file">Upload Photo (Optional)</label>
                         <input
                           type="file"
                           name="file"
+                          accept = "image/*"
                           onChange={(e)=> setFormData(prev => ({...prev, file: e.target.files?.[0] || null}))}
                           className=' w-full p-2 border border-teal-800 h-10 rounded-xl mb-4'
                         />

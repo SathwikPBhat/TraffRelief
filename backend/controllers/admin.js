@@ -6,6 +6,7 @@ const centre = require("../models/centre.js");
 const activityLog = require("../models/activityLog.js");
 const Victim = require("../models/victim.js");
 const Audit = require("../models/audit.js");
+const { cloudinary } = require("../utils/cloudinary");
 
 const viewStaffs = async (req, res) => {
   try {
@@ -30,25 +31,19 @@ const viewStaffs = async (req, res) => {
 
 const handleAddStaff = async (req, res) => {
   try {
-    const id = req.user.id;
-    const {fullName, email, phoneNumber, password, role, center } =
-      req.body;
-    if (!id) {
-      return res.status(401).json({ message: "Forbidden" });
-    }
+    const { fullName, email, phoneNumber, password, center, role } = req.body;
+    const adminId = req.user.id;
+    const photoUrl = req.file ? req.file.path : null;
     if (!fullName || !email || !phoneNumber || !password || !center || !role) {
-      return res.status(400).json({ message: "All fields are required." });
+      return res.status(400).json({ message: "All fields are required" });
     }
-
-    if (
-      !fullName.trim() ||
-      !email.trim() ||
-      !phoneNumber.trim() ||
-      !password.trim() ||
-      !center.trim() ||
-      !role.trim()
-    ) {
-      return res.status(400).json({ message: "All fields are required." });
+    const admin = await Admin.findOne({ adminId });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    const existingStaff = await Staff.findOne({ email });
+    if (existingStaff) {
+      return res.status(409).json({ message: "Staff with this email already exists" });
     }
     const lastStaff = await Staff.findOne().sort({ staffId: -1 });
     let idNo = 101;
@@ -61,31 +56,27 @@ const handleAddStaff = async (req, res) => {
     if (!centerDoc) {
       return res.status(404).json({ message: "Centre not found" });
     }
-    const adminDoc = await Admin.findOne({ adminId: id });
+    const adminDoc = await Admin.findOne({ adminId });
 
     const newStaff = {
       staffId: `S-${idNo}`,
-      fullName: fullName,
-      email: email,
+      fullName,
+      email,
       mobileNo: phoneNumber,
       password: password,
       centre: centerDoc._id,
       role: role,
+      photo: photoUrl,
       reportsTo: adminDoc._id,
     };
 
-    const existingStaff = await Staff.findOne({ email: newStaff.email });
-    if (existingStaff) {
-      return res
-        .status(409)
-        .json({ message: "Staff with this email already exists." });
-    }
     const createdStaff = await Staff.create(newStaff);
     const log = {
       adminId: adminDoc._id,
       staffId: createdStaff._id,
       activity: `New Staff created`,
       description: `New Staff (${createdStaff.fullName}) added to centre ${centerDoc.centreName}`,
+      readStatus: false,
     };
     const createdLog = await activityLog.create(log);
     res.status(201).json({
@@ -109,7 +100,7 @@ const getActivityLogs = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
     const log = await ActivityLog.find({ adminId: foundAdmin._id }).sort({
-      timestamp: -1,
+      createdAt: -1,
     });
     return res
       .status(200)
@@ -180,8 +171,7 @@ const parseToArray = (v) => {
 
 const addVictim = async (req, res) => {
   try {
-    console.log("req.body:", req.body);
-    console.log("req.file:", req.file);
+    const photoUrl = req.file ? req.file.path : null;
 
     const adminId = req.user.id;
     const admin = await Admin.findOne({ adminId });
@@ -216,11 +206,6 @@ const addVictim = async (req, res) => {
       return res.status(400).json({ message: "Invalid JSON in arrays" });
     }
 
-    // let victimImagePath = null;
-    // if (req.file) {
-    //   victimImagePath = `/uploads/${req.file.filename}`;
-    // }
-
     let newVictimId = "V-101";
     const lastVictim = await Victim.findOne().sort({ createdAt: -1 });
 
@@ -236,6 +221,7 @@ const addVictim = async (req, res) => {
       gender,
       languagesSpoken: parsedLanguages,
       admin: admin._id,
+      photo: photoUrl,
       caseDetailsForAdmin: {
         traffickingType,
         traffickingLocations: locations ? [locations] : [],
@@ -439,6 +425,125 @@ async function releaseVictim(req, res){
   }
 }
 
+
+async function verifyInitialDetails(req, res) {
+  try {
+    const { victimId } = req.params;
+    const adminId = req.user.id;
+
+    if (!victimId) {
+      return res.status(400).json({ message: "victimId is required" });
+    }
+
+    const admin = await Admin.findOne({ adminId });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const victim = await Victim.findOne({ victimId });
+    if (!victim) {
+      return res.status(404).json({ message: "Victim not found" });
+    }
+
+    if (victim.admin.toString() !== admin._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized to verify this victim" });
+    }
+
+    if (!victim.initialDetails || !victim.initialDetails.photo) {
+      return res.status(400).json({ message: "No initial details to verify" });
+    }
+
+    victim.initialDetails.verificationStatus = "verified";
+    victim.initialDetails.verifiedBy = admin._id;
+    victim.initialDetails.verifiedAt = new Date();
+    await victim.save();
+
+    await activityLog.create({
+      adminId: admin._id,
+      staffId: victim.staff._id,
+      victimId: victim._id,
+      activity: "Initial Details Verified",
+      description: `Admin ${admin.fullName} verified initial details for victim ${victim.fullName} (${victim.victimId})`,
+      readStatus: false,
+    });
+
+    return res.status(200).json({
+      message: "Initial details verified successfully",
+      victim,
+    });
+  } catch (err) {
+    console.error("Error verifying initial details:", err);
+    return res.status(500).json({ message: err.message });
+  }
+}
+
+async function discardInitialDetails(req, res) {
+  try {
+    const { victimId } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    if (!victimId) {
+      return res.status(400).json({ message: "victimId is required" });
+    }
+
+    const admin = await Admin.findOne({ adminId });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const victim = await Victim.findOne({ victimId });
+    if (!victim) {
+      return res.status(404).json({ message: "Victim not found" });
+    }
+
+    if (victim.admin.toString() !== admin._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized to discard this victim's data" });
+    }
+
+    if (!victim.initialDetails || !victim.initialDetails.photo) {
+      return res.status(400).json({ message: "No initial details to discard" });
+    }
+
+    if (victim.initialDetails.photo) {
+      try {
+        const photoUrl = victim.initialDetails.photo;
+        const publicId = photoUrl.split('/').slice(-2).join('/').split('.')[0];
+        await cloudinary.uploader.destroy(publicId);
+        console.log("Deleted image from Cloudinary:", publicId);
+      } catch (cloudinaryErr) {
+        console.error("Error deleting from Cloudinary:", cloudinaryErr);
+      }
+    }
+
+    victim.initialDetails = {
+      verificationStatus: "rejected",
+      rejectionReason: reason || "Photo verification failed",
+      verifiedBy: admin._id,
+      verifiedAt: new Date(),
+    };
+    await victim.save();
+
+    if (victim.staff) {
+      await activityLog.create({
+        staffId: victim.staff._id,
+        victimId: victim._id,
+        activity: "Initial Details Rejected",
+        description: `Admin ${admin.fullName} rejected initial details for victim ${victim.fullName} (${victim.victimId}). Reason: ${reason || "Photo verification failed"}. Please re-submit.`,
+        readStatus: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Initial details discarded successfully",
+      victim,
+    });
+  } catch (err) {
+    console.error("Error discarding initial details:", err);
+    return res.status(500).json({ message: err.message });
+  }
+}
+
 module.exports = {
   handleAddStaff,
   viewStaffs,
@@ -451,5 +556,7 @@ module.exports = {
   getAllAudits,
   getAdminDetails,
   getStaffAudits,
-  releaseVictim
+  releaseVictim,
+  verifyInitialDetails,
+  discardInitialDetails,
 };

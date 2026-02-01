@@ -12,7 +12,7 @@ function VictimCard({victimData}) {
     <div className='w-full rounded-xl border border-teal-600 shadow-[0px_4px_4px_0px_rgba(0,105,92,1.00)] bg-white flex flex-col sm:flex-row p-4 gap-4 justify-between font-[QuickSand] relative'>
         <div className='flex gap-4 w-full'>
             <div className='flex items-center justify-center'>
-                <img src={golimaams} className='size-20' alt="victim_img" />
+                <img src={victimData.photo || golimaams} className='size-20 rounded-lg' alt="victim_img" />
             </div>
             <div className='flex flex-col gap-2 justify-evenly'>
                 <div className='flex items-center gap-2'>

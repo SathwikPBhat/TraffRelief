@@ -130,7 +130,7 @@ const getNotifications = async (req, res) => {
       return res.status(404).json({ message: "Staff not found" });
     }
     const log = await activityLog.find({ staffId: foundStaff._id }).sort({
-      timestamp: -1,
+      createdAt: -1,
     });
     return res
       .status(200)
@@ -140,6 +140,8 @@ const getNotifications = async (req, res) => {
   }
 };
 
+// ...existing code...
+
 const addInitialDetails = async (req, res) => {
   try {
     const { victimId } = req.body;
@@ -148,16 +150,21 @@ const addInitialDetails = async (req, res) => {
       return res.status(400).json({ message: "Victim ID is required" });
     }
 
-    // Find the victim
+    if (!req.file) {
+      return res.status(400).json({ message: "Victim photo is required" });
+    }
+
     const victim = await Victim.findOne({ victimId });
     if (!victim) {
       return res.status(404).json({ message: "Victim not found" });
     }
 
-    if (victim.initialDetails && victim.initialDetails.addedAt) {
-      return res.status(400).json({
-        message: "Initial details already exist for this victim",
-      });
+    const status = victim.initialDetails?.verificationStatus;
+    if (status === "pending") {
+      return res.status(400).json({ message: "Initial details are pending verification" });
+    }
+    if (status === "verified") {
+      return res.status(400).json({ message: "Initial details already verified" });
     }
 
     const injuriesSustained = JSON.parse(req.body.injuriesSustained || "[]");
@@ -165,6 +172,7 @@ const addInitialDetails = async (req, res) => {
       req.body.physicalDisabilities || "[]"
     );
     const substanceAbuse = JSON.parse(req.body.substanceAbuse || "[]");
+
     const initialDetails = {
       injuriesSustained,
       otherInjuries: req.body.otherInjuries || "",
@@ -177,21 +185,37 @@ const addInitialDetails = async (req, res) => {
       rescueAttempts: req.body.rescueAttempts || "",
       rescueDetails: req.body.rescueDetails || "",
       legalStatus: req.body.legalStatus || "",
-      photo: req.file ? req.file.filename : "",
+      photo: req.file.path, 
       addedAt: new Date(),
+      verificationStatus: "pending",
     };
 
     victim.initialDetails = initialDetails;
     await victim.save();
 
+    const staff = await Staff.findOne({ staffId: req.user.id });
+    if (staff && victim.admin) {
+      await activityLog.create({
+        adminId: victim.admin,
+        victimId: victim._id,
+        staffId: staff._id,
+        activity: "Initial Details Added",
+        description: `Staff ${staff.fullName} added initial details for victim ${victim.fullName} (${victim.victimId}). Pending admin verification.`,
+        readStatus: false,
+      });
+    }
+
     return res.status(200).json({
-      message: "Initial details added successfully",
+      message: "Initial details added successfully and pending admin verification",
       victim: victim,
     });
   } catch (err) {
+    console.error("Error adding initial details:", err);
     return res.status(500).json({ message: err.message });
   }
 };
+
+
 
 async function getStaffAudits(req, res) {
   try {

@@ -20,7 +20,8 @@ import VictimManagementForStaff from "./pages/VictimManagementForStaff";
 import VictimProfile from "./pages/VictimProfile";
 import ViewReleasesByVictim from "./pages/ViewReleasesByVictim";
 import Analytics from "./pages/Analytics";
-import VictimProgressCharts from "./pages/VictimProgressCharts"
+import VictimProgressCharts from "./pages/VictimProgressCharts";
+import VictimInitialVerification from "./pages/VictimInitialVerification";
 
 function App() {
   return (
@@ -50,6 +51,14 @@ function App() {
           element={
             <PrivateRoute>
               <StaffManagement />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/victim-verify/:victimId"
+          element={
+            <PrivateRoute>
+              <VictimInitialVerification />
             </PrivateRoute>
           }
         />

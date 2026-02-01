@@ -8,14 +8,15 @@ const {createRelease,submitRelease,viewReleaseResults,viewReleaseByVictim}=requi
 const {getPendingAudits}=require("../controllers/audit.js");
 const {getReleasedVictims}=require("../controllers/staff.js");
 const { getAuditsByVictimId } = require('../controllers/audit.js');
-const {verifyToken} = require('../middlewares/authentication.js')
+const {verifyToken} = require('../middlewares/authentication.js');
+const { uploadCloud } = require("../utils/cloudinary.js");
 
 router.get('/get-my-victims', verifyToken, getMyVictims);
 router.get('/get-victims/:staffId', verifyToken, getVictims);
 router.get('/get-victim/:victimId', verifyToken, getVictimById);
 router.get('/get-staff/:staffId', verifyToken, getStaffById);
 router.get('/getNotifications', verifyToken, getNotifications);
-router.post('/add-initial-details', upload.single('photo'), verifyToken, addInitialDetails);
+router.post('/add-initial-details', verifyToken, uploadCloud.single('photo'), verifyToken, addInitialDetails);
 router.post('/:staffId/:victimId/add-audit', addAudit, verifyToken, evaluateAudit)
 router.get('/:staffId/audits', verifyToken, getStaffAudits);
 router.post('/:staffId/create-release/:victimId', createRelease);

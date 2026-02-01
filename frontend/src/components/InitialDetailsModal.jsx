@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Select from "react-select";
 import { customStyles } from "../utils/auditOptions";
 import { toast } from "react-toastify";
@@ -67,6 +68,13 @@ function InitialDetailsModal({ victims = [], onClose }) {
   const currentVictim = victims[idx];
   const token = localStorage.getItem("token");
 
+  // Camera state
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
   const [formData, setFormData] = useState({
     injuriesSustained: [],
     otherInjuries: "",
@@ -82,8 +90,107 @@ function InitialDetailsModal({ victims = [], onClose }) {
     photo: null,
   });
 
+
+const startCamera = async () => {
+  try {
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+    });
+
+
+    streamRef.current = stream;
+    setIsCameraActive(true); 
+  } catch (err) {
+    toast.error("Camera access denied or not available", {
+      toastId: "camera-error",
+    });
+    console.error("Camera error:", err);
+  }
+};
+useEffect(() => {
+  if (isCameraActive && videoRef.current && streamRef.current) {
+    videoRef.current.srcObject = streamRef.current;
+    
+    videoRef.current.onloadedmetadata = () => {
+      console.log("Video metadata loaded");
+      videoRef.current.play()
+        .then(() => console.log("Video playing"))
+        .catch(err => console.error("Video play error:", err));
+    };
+  }
+}, [isCameraActive]); 
+
+
+const stopCamera = () => {
+  if (streamRef.current) {
+    streamRef.current.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setIsCameraActive(false);
+    console.log("Camera stopped");
+  }
+};
+
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) {
+      console.error("Video or canvas ref is null");
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      toast.error("Video not ready yet, please wait", { toastId: "video-not-ready" });
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const file = new File(
+            [blob],
+            `victim_${currentVictim.victimId}_${Date.now()}.jpg`,
+            { type: "image/jpeg" }
+          );
+          setFormData((prev) => ({ ...prev, photo: file }));
+          setCapturedImage(URL.createObjectURL(blob));
+          stopCamera();
+          toast.success("Photo captured successfully", {
+            toastId: "capture-success",
+          });
+        }
+      },
+      "image/jpeg",
+      0.9
+    );
+  };
+
+
+  const retakePhoto = () => {
+    if (capturedImage) URL.revokeObjectURL(capturedImage);
+    setCapturedImage(null);
+    setFormData((prev) => ({ ...prev, photo: null }));
+    startCamera();
+  };
+
+  // Reset form when victim changes
   useEffect(() => {
-    // Reset form when victim changes
+    stopCamera();
+    if (capturedImage) URL.revokeObjectURL(capturedImage);
+    setCapturedImage(null);
+
     setFormData({
       injuriesSustained: [],
       otherInjuries: "",
@@ -98,23 +205,34 @@ function InitialDetailsModal({ victims = [], onClose }) {
       legalStatus: "",
       photo: null,
     });
-  }, [idx]);
+  }, [idx, currentVictim?.victimId]);
+
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+      if (capturedImage) URL.revokeObjectURL(capturedImage);
+    };
+  }, []);
 
   const handleMultiSelectChange = (field, selected) => {
     setFormData((prev) => ({ ...prev, [field]: selected || [] }));
   };
 
   const handleChange = (e) => {
-    const { name, value, type, files } = e.target;
-    if (type === "file") {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async () => {
     if (!currentVictim) return;
+
+ 
+    if (!formData.photo) {
+      toast.error("Please capture victim's photo before submitting", {
+        toastId: "photo-required",
+      });
+      return;
+    }
 
     const data = new FormData();
     data.append("victimId", currentVictim.victimId);
@@ -138,9 +256,7 @@ function InitialDetailsModal({ victims = [], onClose }) {
     data.append("rescueAttempts", formData.rescueAttempts);
     data.append("rescueDetails", formData.rescueDetails);
     data.append("legalStatus", formData.legalStatus);
-    if (formData.photo) {
-      data.append("photo", formData.photo);
-    }
+    data.append("photo", formData.photo);
 
     try {
       const res = await fetch(
@@ -159,7 +275,13 @@ function InitialDetailsModal({ victims = [], onClose }) {
         toast.success(`Initial details saved for ${currentVictim.fullName}`, {
           toastId: "initial-details-success",
         });
-        
+
+        // Move to next victim or close
+        if (idx < victims.length - 1) {
+          setIdx(idx + 1);
+        } else {
+          onClose();
+        }
       } else {
         toast.error(result.message || "Failed to save initial details", {
           toastId: "initial-details-error",
@@ -174,8 +296,8 @@ function InitialDetailsModal({ victims = [], onClose }) {
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-8">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-8 font-['QuickSand']">
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         onClick={onClose}
@@ -354,16 +476,81 @@ function InitialDetailsModal({ victims = [], onClose }) {
             </select>
           </div>
 
-          {/* Photo Upload */}
-          <div className="flex flex-col gap-2">
-            <label className="font-bold text-teal-800">Upload Photo</label>
-            <input
-              type="file"
-              name="photo"
-              accept="image/*"
-              onChange={handleChange}
-              className="h-12 px-4 border-2 border-teal-600 rounded-xl bg-stone-50 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
-            />
+          {/* Camera Capture Section - Full Width */}
+          <div className="flex flex-col gap-3 col-span-full">
+            <label className="font-bold text-teal-800">
+              Capture Victim Photo <span className="text-red-600">*</span>
+            </label>
+
+            {/* Debug Info */}
+            <div className="text-xs text-gray-500">
+              Camera Active: {isCameraActive ? "Yes" : "No"} | Captured: {capturedImage ? "Yes" : "No"}
+            </div>
+
+            {/* No camera active and no captured image */}
+            {!isCameraActive && !capturedImage && (
+              <button
+                type="button"
+                onClick={startCamera}
+                className="px-6 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition font-medium shadow-md"
+              >
+                📷 Start Camera
+              </button>
+            )}
+
+            {/* Camera active - show video feed */}
+            {isCameraActive && (
+              <div className="space-y-3 border-2 border-amber-500 p-4 rounded-xl">
+                <p className="text-sm text-amber-700">Camera should appear below:</p>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full max-w-lg mx-auto rounded-xl border-2 border-teal-600 shadow-lg bg-black"
+                  style={{ minHeight: "300px" }}
+                />
+                <div className="flex gap-3 justify-center">
+                  <button
+                    type="button"
+                    onClick={capturePhoto}
+                    className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium"
+                  >
+                    📸 Capture
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopCamera}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Captured image preview */}
+            {capturedImage && (
+              <div className="space-y-3">
+                <img
+                  src={capturedImage}
+                  alt="Captured victim"
+                  className="w-full max-w-lg mx-auto rounded-xl border-2 border-teal-600 shadow-lg"
+                />
+                <div className="flex justify-center">
+                  <button
+                    type="button"
+                    onClick={retakePhoto}
+                    className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition font-medium"
+                  >
+                    🔄 Retake Photo
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Hidden canvas for capturing */}
+            <canvas ref={canvasRef} className="hidden" />
           </div>
 
           {/* Rescue Details (conditional - full width) */}
@@ -387,16 +574,25 @@ function InitialDetailsModal({ victims = [], onClose }) {
 
         {/* Action Buttons */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-teal-200">
+          {idx > 0 && (
+            <button
+              onClick={() => setIdx(idx - 1)}
+              className="px-6 py-2 rounded-xl border-2 border-teal-600 text-teal-700 font-semibold hover:bg-teal-50 transition"
+            >
+              ← Previous
+            </button>
+          )}
 
           <button
             onClick={handleSubmit}
-            className="px-8 py-2 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition shadow-md"
+            className="px-8 py-2 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition shadow-md ml-auto"
           >
-            {idx < victims.length - 1 ? "Save & Next" : "Save & Finish"}
+            {idx < victims.length - 1 ? "Save & Next →" : "Save & Finish"}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

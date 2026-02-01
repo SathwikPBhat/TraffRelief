@@ -136,19 +136,16 @@ function StaffProfile() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 items-start text-sm sm:text-base mt-2 w-full">
             <div className="flex items-start gap-4 sm:gap-5">
               <img
-                src={golimaams}
+                src={staffData.photo || golimaams}
                 alt="staff_img"
                 className="size-16 sm:size-20 md:size-24 lg:size-28 rounded-lg shrink-0"
               />
               <div className="flex flex-col gap-1 min-w-0 flex-1">
-                <p className="break-words">
+                <p>
                   Name: <span className="text-teal-700 font-medium">{staffData.fullName}</span>
                 </p>
-                <p className="break-words">
-                  Email: <span className="text-teal-700 font-medium">{staffData.email}</span>
-                </p>
                 <p>
-                  Gender: <span className="text-teal-700 font-medium">{staffData.gender || "N/A"}</span>
+                  Email: <span className="text-teal-700 font-medium">{staffData.email}</span>
                 </p>
                 <p>
                   Contact: <span className="text-teal-700 font-medium">{staffData.mobileNo}</span>

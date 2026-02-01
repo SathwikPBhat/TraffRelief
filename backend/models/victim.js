@@ -75,6 +75,24 @@ const initialDetailsSchema = new mongoose.Schema({
     addedAt: {
         type: Date,
         default: Date.now
+    },
+    verificationStatus: { 
+        type: String,
+        enum: ["pending", "verified", "rejected"],
+        default: "pending"
+    },
+    verifiedBy: { 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Admin",
+        default: null
+    },
+    verifiedAt: { 
+        type: Date,
+        default: null
+    },
+    rejectionReason: { 
+        type: String,
+        default: ""
     }
 });
 
@@ -88,8 +106,9 @@ const victimSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    victimImage:{
+    photo:{
         type: String,
+        default: null
     },
     age:{
         type: Number,

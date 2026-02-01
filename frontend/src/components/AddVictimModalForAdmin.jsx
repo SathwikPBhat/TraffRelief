@@ -108,7 +108,6 @@ function AddVictimModalForAdmin({ onClose }) {
     name: "",
     age: "",
     gender: "",
-    centre: "",
     traffickingType: "",
     locations: "",
     duration: "",
@@ -312,13 +311,13 @@ const handleSubmit = async (e) => {
                     />
                   </div>
                   <div className="flex flex-col gap-2 lg:col-start-1 lg:col-end-3">
-                    <label htmlFor="certificate">
-                      Previous attempts at rescue
+                    <label htmlFor="image">
+                      Victim Image
                     </label>
                     <input
                       type="file"
                       name="file"
-                      accept=".pdf,.doc,.docx,image/*"
+                      accept="image/*"
                       onChange={handleFileChange}
                       className=" h-8 p-2 border border-teal-600 rounded-xl bg-stone-100 "
                     />
